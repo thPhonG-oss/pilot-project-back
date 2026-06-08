@@ -17,6 +17,10 @@ public abstract class BaseEntity {
     @ColumnDefault("0")
     private Long version;
 
+    @Column(nullable = false)
+    @ColumnDefault("true")
+    private boolean activated;
+
     public BaseEntity() {}
 
     protected BaseEntity(Long id) {
@@ -26,6 +30,12 @@ public abstract class BaseEntity {
     protected BaseEntity(Long id, Long version) {
         this.id = id;
         this.version = version;
+    }
+
+    public BaseEntity(Long id, Long version, boolean activated) {
+        this.id = id;
+        this.version = version;
+        this.activated = activated;
     }
 
     public Long getId() {
@@ -38,5 +48,13 @@ public abstract class BaseEntity {
 
     public Long getVersion() {
         return version;
+    }
+
+    public boolean isActivated() {
+        return activated;
+    }
+
+    public void setActivated(boolean activated) {
+        this.activated = activated;
     }
 }

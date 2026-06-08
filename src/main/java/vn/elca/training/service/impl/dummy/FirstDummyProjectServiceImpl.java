@@ -45,4 +45,9 @@ public class FirstDummyProjectServiceImpl extends AbstractDummyProjectService im
     public Project updateProject(Long id, ProjectDto projectDto) {
         throw new UnsupportedOperationException("Not implemented yet");
     }
+
+    @Override
+    public Project createMaintennanceProject(Long oldProjectId) {
+        throw new UnsupportedOperationException("Not implemented yet");
+    }
 }

@@ -1,20 +1,14 @@
 package vn.elca.training.service.impl;
 
-import com.querydsl.jpa.JPQLQuery;
-import com.querydsl.jpa.impl.JPAQuery;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Profile;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import vn.elca.training.model.dto.ProjectDto;
 import vn.elca.training.model.entity.Project;
-import vn.elca.training.model.entity.QProject;
 import vn.elca.training.model.exception.ProjectNotFoundException;
 import vn.elca.training.repository.ProjectRepository;
 import vn.elca.training.service.ProjectService;
@@ -22,8 +16,8 @@ import vn.elca.training.util.PaginationUtil;
 
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
+import java.time.LocalDate;
 import java.util.List;
-import java.util.Optional;
 
 /**
  * @author vlp
@@ -84,5 +78,32 @@ public class ProjectServiceImpl implements ProjectService {
         targetProject.setCustomer(projectDto.getCustomer());
 
         return projectRepository.save(targetProject);
+    }
+
+    @Transactional(rollbackFor = Exception.class)
+    @Override
+    public Project createMaintennanceProject(Long oldProjectId){
+        // check existing project
+        Project oldProject = projectRepository.findById(oldProjectId)
+                .orElseThrow(() -> new ProjectNotFoundException("Project not found with id: " + oldProjectId));
+
+        // create new maintenance project
+        Project newMaintennanceProject = new Project();
+        newMaintennanceProject.setName(buildMaintenanceProjectName(oldProject));
+        newMaintennanceProject.setCustomer(oldProject.getCustomer());
+        newMaintennanceProject.setFinishingDate(oldProject.getFinishingDate());
+
+        Project savedProject =  projectRepository.save(newMaintennanceProject);
+
+        // update activated of the old project
+        oldProject.setActivated(false);
+        projectRepository.save(oldProject);
+
+        return savedProject;
+    }
+
+    private String buildMaintenanceProjectName(Project oldProject){
+
+        return oldProject.getName() + "Maint." + LocalDate.now().getYear();
     }
 }

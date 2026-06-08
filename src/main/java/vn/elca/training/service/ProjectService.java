@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.domain.Page;
+import org.springframework.transaction.annotation.Transactional;
 import vn.elca.training.model.dto.ProjectDto;
 import vn.elca.training.model.entity.Project;
 
@@ -22,4 +23,7 @@ public interface ProjectService {
     Project findProjectById(Long id);
 
     Project updateProject(Long id, ProjectDto projectDto);
+
+    @Transactional(rollbackFor = Exception.class)
+    Project createMaintennanceProject(Long oldProjectId);
 }
