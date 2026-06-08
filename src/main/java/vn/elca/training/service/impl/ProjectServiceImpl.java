@@ -1,5 +1,7 @@
 package vn.elca.training.service.impl;
 
+import com.querydsl.jpa.JPQLQuery;
+import com.querydsl.jpa.impl.JPAQuery;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -12,11 +14,14 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import vn.elca.training.model.dto.ProjectDto;
 import vn.elca.training.model.entity.Project;
+import vn.elca.training.model.entity.QProject;
 import vn.elca.training.model.exception.ProjectNotFoundException;
 import vn.elca.training.repository.ProjectRepository;
 import vn.elca.training.service.ProjectService;
 import vn.elca.training.util.PaginationUtil;
 
+import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
 import java.util.List;
 import java.util.Optional;
 
@@ -27,6 +32,8 @@ import java.util.Optional;
 @Service
 @Profile("!dummy | dev")
 public class ProjectServiceImpl implements ProjectService {
+    @PersistenceContext
+    private EntityManager em;
 
     private static final Logger log = LoggerFactory.getLogger(ProjectServiceImpl.class);
     private ProjectRepository projectRepository;

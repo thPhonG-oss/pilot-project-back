@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Entity
+@Table(name = "groups")
 public class Group extends BaseEntity{
     @OneToOne(
             fetch = FetchType.LAZY,

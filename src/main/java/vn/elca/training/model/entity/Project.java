@@ -1,5 +1,7 @@
 package vn.elca.training.model.entity;
 
+import org.hibernate.annotations.ColumnDefault;
+
 import javax.persistence.*;
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -18,8 +20,12 @@ public class Project extends BaseEntity{
     @Column
     private LocalDate finishingDate;
 
-    @Column
+    @Column(nullable = true, length = 50)
     private String customer;
+
+    @Column
+    @Enumerated(value = EnumType.STRING)
+    private Status status;
 
     @OneToMany(mappedBy = "project", fetch = FetchType.LAZY)
     private Set<Task> tasks = new HashSet<>();
@@ -86,6 +92,22 @@ public class Project extends BaseEntity{
 
     public void setEmployees(List<Employee> employees) {
         this.employees = employees;
+    }
+
+    public Group getGroup() {
+        return group;
+    }
+
+    public void setGroup(Group group) {
+        this.group = group;
+    }
+
+    public Status getStatus() {
+        return status;
+    }
+
+    public void setStatus(Status status) {
+        this.status = status;
     }
 
     // helper methods
