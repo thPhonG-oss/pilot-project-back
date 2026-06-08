@@ -1,6 +1,8 @@
 package vn.elca.training.model.entity;
 
 import javax.persistence.*;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 public class Group extends BaseEntity{
@@ -10,6 +12,12 @@ public class Group extends BaseEntity{
     )
     @JoinColumn(name = "group_leader_id")
     private Employee leader;
+
+    @OneToMany(
+            mappedBy = "group",
+            cascade = {CascadeType.PERSIST, CascadeType.MERGE}
+    )
+    private List<Project> projects = new ArrayList<>();
 
     public Group() {}
 
@@ -23,5 +31,13 @@ public class Group extends BaseEntity{
 
     public void setLeader(Employee leader) {
         this.leader = leader;
+    }
+
+    public List<Project> getProjects() {
+        return projects;
+    }
+
+    public void setProjects(List<Project> projects) {
+        this.projects = projects;
     }
 }

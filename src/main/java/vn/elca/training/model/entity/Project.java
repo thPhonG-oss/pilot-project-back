@@ -11,11 +11,7 @@ import java.util.Set;
  * @author vlp
  */
 @Entity
-public class Project {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
-
+public class Project extends BaseEntity{
     @Column(nullable = false)
     private String name;
 
@@ -38,26 +34,18 @@ public class Project {
     )
     private List<Employee> employees = new ArrayList<>();
 
+    @ManyToOne(
+            fetch = FetchType.LAZY
+    )
+    @JoinColumn(name = "group_id")
+    private Group group;
+
     public Project() {
     }
 
     public Project(String name, LocalDate finishingDate) {
         this.name = name;
         this.finishingDate = finishingDate;
-    }
-
-    public Project(Long id, String name, LocalDate finishingDate) {
-        this.id = id;
-        this.name = name;
-        this.finishingDate = finishingDate;
-    }
-
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
     }
 
     public String getName() {
