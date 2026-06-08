@@ -59,4 +59,9 @@ public class ProjectController extends AbstractApplicationController {
         log.info("Project name: {}", projectDto.getName());
         return mapper.projectToProjectDto(projectService.updateProject(id, projectDto));
     }
+
+    @PostMapping("/{oldProjectId}")
+    public ProjectDto createMaintenanceProject(@Valid @PathVariable Long oldProjectId){
+        return mapper.projectToProjectDto(projectService.createMaintennanceProject(oldProjectId));
+    }
 }

@@ -57,4 +57,9 @@ public abstract class BaseEntity {
     public void setActivated(boolean activated) {
         this.activated = activated;
     }
+
+    @PrePersist
+    public void prePersist(){
+        this.activated = true;
+    }
 }

@@ -92,12 +92,13 @@ public class ProjectServiceImpl implements ProjectService {
         newMaintennanceProject.setName(buildMaintenanceProjectName(oldProject));
         newMaintennanceProject.setCustomer(oldProject.getCustomer());
         newMaintennanceProject.setFinishingDate(oldProject.getFinishingDate());
-
         Project savedProject =  projectRepository.save(newMaintennanceProject);
 
         // update activated of the old project
         oldProject.setActivated(false);
         projectRepository.save(oldProject);
+
+        log.info("Status of new project: {}", newMaintennanceProject.isActivated());
 
         return savedProject;
     }
