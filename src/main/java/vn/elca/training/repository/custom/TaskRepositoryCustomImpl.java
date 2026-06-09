@@ -24,6 +24,7 @@ public class TaskRepositoryCustomImpl implements TaskRepositoryCustom {
         return new JPAQuery<Project>(em)
                 .from(QProject.project)
                 .innerJoin(QProject.project.tasks, QTask.task)
+                .fetchJoin()
                 .where(QTask.task.name.eq(taskName))
                 .fetch();
     }
@@ -32,6 +33,8 @@ public class TaskRepositoryCustomImpl implements TaskRepositoryCustom {
     public List<Task> listRecentTasks(int limit) {
         return new JPAQuery<Task>(em)
                 .from(QTask.task)
+                .join(QTask.task.project)
+                .fetchJoin()
                 .orderBy(QTask.task.id.desc())
                 .limit(limit)
                 .fetch();

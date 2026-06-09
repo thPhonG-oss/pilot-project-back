@@ -98,7 +98,10 @@ public class ProjectServiceImpl implements ProjectService {
         oldProject.setActivated(false);
         projectRepository.save(oldProject);
 
-        log.info("Status of new project: {}", newMaintennanceProject.isActivated());
+        log.info("New maintenance project created: name={}, activated={}",
+                savedProject.getName(), savedProject.isActivated());
+        log.info("Old project deactivated: id={}, name={}",
+                oldProject.getId(), oldProject.getName());
 
         return savedProject;
     }
