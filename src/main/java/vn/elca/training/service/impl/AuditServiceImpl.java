@@ -34,7 +34,7 @@ import vn.elca.training.service.AuditService;
  *
  */
 @Service
-@Transactional
+@Transactional(value = Transactional.TxType.REQUIRES_NEW)
 public class AuditServiceImpl implements AuditService {
     private Log logger = LogFactory.getLog(getClass());
 

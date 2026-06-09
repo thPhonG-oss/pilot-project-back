@@ -108,6 +108,7 @@ public class TaskServiceImpl implements TaskService {
 	}
 
 	@Override
+	@Transactional(rollbackFor = Exception.class)
 	public void createTaskForProject(String taskName, LocalDate deadline, Project project) {
 		Task task = new Task(project, taskName);
 		task.setDeadline(deadline);
