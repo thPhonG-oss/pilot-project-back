@@ -9,9 +9,10 @@ import java.util.HashSet;
 import java.util.Set;
 
 public class PaginationUtil {
-    private static final int DEFAULT_PAGE = 0;
-    private static final int DEFAULT_SIZE = 20;
-    private static final int MAX_SIZE = 100;
+    private static final int DEFAULT_PAGE = 1;
+    private static final int MAX_PAGE = 50;
+    private static final int DEFAULT_SIZE = 5;
+    private static final int MAX_SIZE = 50;
     private static final String DEFAULT_SORT_BY = "id";
     private static final Set<String> ALLOWED_SORT_FIELDS;
 
@@ -22,16 +23,27 @@ public class PaginationUtil {
         ALLOWED_SORT_FIELDS.add("status");
         ALLOWED_SORT_FIELDS.add("totalAmount");
         ALLOWED_SORT_FIELDS.add("orderCode");
+        ALLOWED_SORT_FIELDS.add("projectNumber");
     }
 
     public static Pageable buildDefaultPagination(){
         Sort sort = Sort.by(DEFAULT_SORT_BY).ascending();
+        return PageRequest.of(DEFAULT_PAGE - 1, DEFAULT_SIZE, sort);
+    }
+
+    public static Pageable buildPaginationWithCustomSorting(String sortBy, String sortDir){
+        if (!ALLOWED_SORT_FIELDS.contains(sortBy)) {
+            throw new BadRequestException("Invalid sort field: " + sortBy);
+        }
+        Sort sort = "asc".equalsIgnoreCase(sortDir) ? Sort.by(sortBy).ascending() : Sort.by(sortBy).descending();
+
         return PageRequest.of(DEFAULT_PAGE, DEFAULT_SIZE, sort);
     }
 
     public static Pageable buildCustomPagination(int page, int size, String sortBy, String sortDir){
 
-        int finalPage = page < DEFAULT_PAGE ? DEFAULT_PAGE : Math.min(page, MAX_SIZE);
+        int validPage = page < DEFAULT_PAGE ? DEFAULT_PAGE : Math.min(page, MAX_PAGE);
+        int validSize = size < DEFAULT_SIZE ? DEFAULT_SIZE : Math.min(size, MAX_SIZE);
 
         if (!ALLOWED_SORT_FIELDS.contains(sortBy)) {
             throw new BadRequestException("Invalid sort field: " + sortBy);
@@ -39,6 +51,6 @@ public class PaginationUtil {
 
         Sort sort = "asc".equalsIgnoreCase(sortDir) ? Sort.by(sortBy).ascending() : Sort.by(sortBy).descending();
 
-        return PageRequest.of(finalPage, size, sort);
+        return PageRequest.of(validPage, validSize, sort);
     }
 }
