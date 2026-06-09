@@ -39,4 +39,12 @@ public class TaskRepositoryCustomImpl implements TaskRepositoryCustom {
                 .limit(limit)
                 .fetch();
     }
+
+    @Override
+    public List<Task> listTasksByIds(List<Long> ids){
+        return new JPAQuery<Task>(em)
+                .from(QTask.task)
+                .where(QTask.task.id.in(ids))
+                .fetch();
+    }
 }

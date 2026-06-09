@@ -13,4 +13,6 @@ public interface TaskRepositoryCustom {
     List<Project> findProjectsByTaskName(String taskName);
 
     List<Task> listRecentTasks(int limit);
+
+    List<Task> listTasksByIds(List<Long> ids);
 }
