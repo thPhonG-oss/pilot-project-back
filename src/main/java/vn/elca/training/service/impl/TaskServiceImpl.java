@@ -96,6 +96,7 @@ public class TaskServiceImpl implements TaskService {
 	}
 
 	@Override
+	@Transactional(rollbackFor = Exception.class)
 	public void updateDeadline(Long taskId, LocalDate deadline) throws DeadlineAfterFinishingDateException {
 		Optional<Task> optional = taskRepository.findById(taskId);
 		if (optional.isPresent()) {
