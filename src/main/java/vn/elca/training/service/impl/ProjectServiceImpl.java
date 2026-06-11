@@ -9,7 +9,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import vn.elca.training.mapper.ProjectMapper;
 import vn.elca.training.model.dto.ProjectDto;
-import vn.elca.training.model.dto.request.ProjectCreationRequest;
+import vn.elca.training.model.dto.request.ProjectRequestDto;
 import vn.elca.training.model.entity.Employee;
 import vn.elca.training.model.entity.Group;
 import vn.elca.training.model.entity.Project;
@@ -127,7 +127,7 @@ public class ProjectServiceImpl implements ProjectService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public ProjectDto createProject(ProjectCreationRequest request){
+    public ProjectDto createProject(ProjectRequestDto request){
         if (projectRepository.existsByProjectNumber(request.getProjectNumber())) {
             throw new BusinessException(ErrorCode.PROJECT_NUMBER_EXISTS);
         }
@@ -143,7 +143,13 @@ public class ProjectServiceImpl implements ProjectService {
         project.setProjectNumber(request.getProjectNumber());
         project.setName(request.getName());
         project.setCustomer(request.getCustomer());
+
+        // handle status
+        if(request.getStatus() == null || !Status.NEW.equals(request.getStatus())){
+            throw new BusinessException(ErrorCode.INVALID_NEW_PROJECT_STATUS);
+        }
         project.setStatus(Status.NEW);
+
         project.setStartDate(request.getStartDate());
         project.setEndDate(request.getEndDate());
         project.setGroup(group);

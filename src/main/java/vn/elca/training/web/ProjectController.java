@@ -1,18 +1,15 @@
 package vn.elca.training.web;
 
-import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import vn.elca.training.mapper.ProjectMapper;
 import vn.elca.training.model.dto.PageResponse;
 import vn.elca.training.model.dto.ProjectDto;
-import vn.elca.training.model.dto.request.ProjectCreationRequest;
+import vn.elca.training.model.dto.request.ProjectRequestDto;
 import vn.elca.training.model.entity.Project;
 import vn.elca.training.model.entity.Status;
 import vn.elca.training.service.ProjectService;
@@ -41,7 +38,7 @@ public class ProjectController extends AbstractApplicationController {
     }
 
     @PostMapping
-    public ProjectDto createProject(@Valid @RequestBody ProjectCreationRequest request){
+    public ProjectDto createProject(@Valid @RequestBody ProjectRequestDto request){
         return projectService.createProject(request);
     }
 
@@ -89,7 +86,7 @@ public class ProjectController extends AbstractApplicationController {
 
     @GetMapping("/{id}")
     public ProjectDto findProjectById(@Min(value = 1L, message = "Project ID must be a positive integer") @PathVariable Long id) {
-        return mapper.projectToProjectDto(projectService.findProjectById(id));
+        return ProjectMapper.INSTANCE.toProjectDto(projectService.findProjectById(id));
     }
 
     @PutMapping("/{id}")
@@ -98,6 +95,6 @@ public class ProjectController extends AbstractApplicationController {
             @Valid @RequestBody ProjectDto projectDto
     ){
         log.info("Project name: {}", projectDto.getName());
-        return mapper.projectToProjectDto(projectService.updateProject(id, projectDto));
+        return ProjectMapper.INSTANCE.toProjectDto(projectService.updateProject(id, projectDto));
     }
 }

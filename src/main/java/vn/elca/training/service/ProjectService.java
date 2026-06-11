@@ -1,13 +1,10 @@
 package vn.elca.training.service;
 
-import java.util.List;
-import java.util.Optional;
-
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.transaction.annotation.Transactional;
 import vn.elca.training.model.dto.ProjectDto;
-import vn.elca.training.model.dto.request.ProjectCreationRequest;
+import vn.elca.training.model.dto.request.ProjectRequestDto;
 import vn.elca.training.model.entity.Project;
 import vn.elca.training.model.entity.Status;
 
@@ -32,5 +29,5 @@ public interface ProjectService {
 
     Page<Project> findProjectsByCriteria(String keyword, Status status, Pageable pageable);
 
-    ProjectDto createProject(ProjectCreationRequest request);
+    ProjectDto createProject(ProjectRequestDto request);
 }
