@@ -7,11 +7,19 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import vn.elca.training.mapper.ProjectMapper;
 import vn.elca.training.model.dto.ProjectDto;
+import vn.elca.training.model.dto.request.ProjectCreationRequest;
+import vn.elca.training.model.entity.Employee;
+import vn.elca.training.model.entity.Group;
 import vn.elca.training.model.entity.Project;
 import vn.elca.training.model.entity.Status;
+import vn.elca.training.model.exception.BusinessException;
+import vn.elca.training.model.exception.ErrorCode;
 import vn.elca.training.model.exception.ProjectNotFoundException;
 import vn.elca.training.repository.ProjectRepository;
+import vn.elca.training.service.EmployeeService;
+import vn.elca.training.service.GroupService;
 import vn.elca.training.service.ProjectService;
 import vn.elca.training.util.PaginationUtil;
 
@@ -34,10 +42,15 @@ public class ProjectServiceImpl implements ProjectService {
     private static final String PROJECT_DEFAULT_SORT_DIR = "ASC";
 
     private static final Logger log = LoggerFactory.getLogger(ProjectServiceImpl.class);
-    private ProjectRepository projectRepository;
+    private final ProjectRepository projectRepository;
 
-    public ProjectServiceImpl(ProjectRepository projectRepository) {
+    private final GroupService groupService;
+    private final EmployeeService employeeService;
+
+    public ProjectServiceImpl(ProjectRepository projectRepository, GroupService groupService, EmployeeService employeeService) {
         this.projectRepository = projectRepository;
+        this.groupService = groupService;
+        this.employeeService = employeeService;
     }
 
     @Override
@@ -111,4 +124,34 @@ public class ProjectServiceImpl implements ProjectService {
 
         return oldProject.getName() + "Maint." + LocalDate.now().getYear();
     }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public ProjectDto createProject(ProjectCreationRequest request){
+        if (projectRepository.existsByProjectNumber(request.getProjectNumber())) {
+            throw new BusinessException(ErrorCode.PROJECT_NUMBER_EXISTS);
+        }
+
+        if(request.getEndDate() != null && !request.getStartDate().isBefore(request.getEndDate())){
+            throw new BusinessException(ErrorCode.INVALID_END_DATE);
+        }
+
+        Group group = groupService.findById(request.getGroupId());
+        List<Employee> employees = employeeService.findEmployeesByVisas(request.getVisas());
+
+        Project project = new Project();
+        project.setProjectNumber(request.getProjectNumber());
+        project.setName(request.getName());
+        project.setCustomer(request.getCustomer());
+        project.setStatus(Status.NEW);
+        project.setStartDate(request.getStartDate());
+        project.setEndDate(request.getEndDate());
+        project.setGroup(group);
+        project.setEmployees(employees);
+
+        Project savedProject = projectRepository.save(project);
+
+        return ProjectMapper.INSTANCE.toProjectDto(savedProject);
+    }
+
 }

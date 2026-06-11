@@ -7,6 +7,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.transaction.annotation.Transactional;
 import vn.elca.training.model.dto.ProjectDto;
+import vn.elca.training.model.dto.request.ProjectCreationRequest;
 import vn.elca.training.model.entity.Project;
 import vn.elca.training.model.entity.Status;
 
@@ -30,4 +31,6 @@ public interface ProjectService {
     Project createMaintennanceProject(Long oldProjectId);
 
     Page<Project> findProjectsByCriteria(String keyword, Status status, Pageable pageable);
+
+    ProjectDto createProject(ProjectCreationRequest request);
 }

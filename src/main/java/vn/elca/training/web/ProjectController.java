@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.*;
 import vn.elca.training.mapper.ProjectMapper;
 import vn.elca.training.model.dto.PageResponse;
 import vn.elca.training.model.dto.ProjectDto;
+import vn.elca.training.model.dto.request.ProjectCreationRequest;
 import vn.elca.training.model.entity.Project;
 import vn.elca.training.model.entity.Status;
 import vn.elca.training.service.ProjectService;
@@ -27,7 +28,7 @@ import java.util.stream.Collectors;
  *
  */
 @RestController
-@RequestMapping("/projects")
+@RequestMapping("/api/v1/projects")
 @Validated
 public class ProjectController extends AbstractApplicationController {
 
@@ -37,6 +38,11 @@ public class ProjectController extends AbstractApplicationController {
 
     public ProjectController(ProjectService projectService) {
         this.projectService = projectService;
+    }
+
+    @PostMapping
+    public ProjectDto createProject(@Valid @RequestBody ProjectCreationRequest request){
+        return projectService.createProject(request);
     }
 
     @GetMapping
