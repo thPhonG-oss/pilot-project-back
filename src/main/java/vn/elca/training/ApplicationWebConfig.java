@@ -8,6 +8,7 @@ import org.springframework.boot.web.servlet.support.SpringBootServletInitializer
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.PropertySource;
+import vn.elca.training.model.exception.GlobalExceptionHandler;
 import vn.elca.training.service.ProjectService;
 import vn.elca.training.util.ApplicationMapper;
 import vn.elca.training.util.ApplicationUtils;
@@ -22,7 +23,8 @@ import vn.elca.training.web.AbstractApplicationController;
         AbstractApplicationController.class,
         ApplicationMapper.class,
         ProjectService.class,
-        ApplicationUtils.class
+        ApplicationUtils.class,
+        GlobalExceptionHandler.class
 })
 @PropertySource({"classpath:/application.properties", "classpath:/messages.properties"})
 public class ApplicationWebConfig extends SpringBootServletInitializer {
