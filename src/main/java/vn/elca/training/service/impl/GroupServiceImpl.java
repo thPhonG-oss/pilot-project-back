@@ -1,4 +1,24 @@
 package vn.elca.training.service.impl;
 
-public class GroupServiceImpl {
+import org.springframework.stereotype.Service;
+import vn.elca.training.model.entity.Group;
+import vn.elca.training.model.exception.BusinessException;
+import vn.elca.training.model.exception.ErrorCode;
+import vn.elca.training.repository.GroupRepository;
+import vn.elca.training.service.GroupService;
+
+import java.util.Optional;
+
+@Service
+public class GroupServiceImpl implements GroupService {
+    private final GroupRepository groupRepository;
+
+    public GroupServiceImpl(GroupRepository groupRepository) {
+        this.groupRepository = groupRepository;
+    }
+
+    @Override
+    public Group findById(Long id){
+        return groupRepository.findById(id).orElseThrow(() -> new BusinessException(ErrorCode.GROUP_NOT_FOUND));
+    }
 }
