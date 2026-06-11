@@ -19,13 +19,6 @@ import vn.elca.training.web.AbstractApplicationController;
  *
  */
 @SpringBootApplication(scanBasePackages = "vn.elca.training")
-@ComponentScan(basePackageClasses = {
-        AbstractApplicationController.class,
-        ApplicationMapper.class,
-        ProjectService.class,
-        ApplicationUtils.class,
-        GlobalExceptionHandler.class
-})
 @PropertySource({"classpath:/application.properties", "classpath:/messages.properties"})
 public class ApplicationWebConfig extends SpringBootServletInitializer {
 
