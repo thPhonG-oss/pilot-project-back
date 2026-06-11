@@ -1,19 +1,27 @@
-INSERT INTO PROJECT (NAME, FINISHING_DATE)
-VALUES
-    ('EFV', '2020-04-20'),
-    ('CXTRANET', '2020-04-25'),
-    ('CRYSTAL BALL', '2020-04-28'),
-    ('IOC CLIENT EXTRANET', '2020-06-07'),
-    ('TRADEECO', '2020-06-08');
+INSERT INTO EMPLOYEE (VISA, FIRST_NAME, LAST_NAME, BIRTH_DATE)
+VALUES ('QMV', 'Quy', 'Van', '1990-02-03'),
+       ('NQN', 'Quan', 'Nguyen', '1999-12-03'),
+       ('HNH', 'Hanh', 'Ho', '1992-05-12'),
+       ('TDN', 'Nhan', 'Tran', '1994-06-17')
+;
 
-INSERT INTO USER (USERNAME)
-VALUES
-    ('USER1'),
-    ('USER2'),
-    ('USER3');
+INSERT INTO GROUPS (GROUP_LEADER_ID)
+VALUES (1),
+       (2);
 
-INSERT INTO TASK(NAME, DEADLINE, PROJECT_ID, USER_ID)
+INSERT INTO PROJECT (PROJECT_NUMBER, NAME, CUSTOMER, STATUS, START_DATE, END_DATE, GROUP_ID)
 VALUES
-    ('EFV_TASK_1', '2020-03-05', 1, 1),
-    ('EFV_TASK_2', '2020-03-10', 1, null),
-    ('EFV_TASK_3', '2020-03-15', 1, null);
+    ('3116', 'Facturation/Encaissements', 'Les Rataites Populaires', 'NEW', '2004-02-25', null, 1),
+    ('3118', 'GKBWEB', 'GKB', 'FIN', '2002-10-10', '2003-10-10', 1),
+    ('7157', 'MGBAHM-Maint2015', 'MGB Tourism', 'INP', '2006-09-24', null, 2),
+    ('7174', 'SOMED-SPITEX MAINT', 'SOMED-SPITEX MAINT', 'NEW', '2015-10-05', null, 2);
+
+INSERT INTO PROJECT_EMPLOYEE(PROJECT_ID, EMPLOYEE_ID)
+VALUES (1, 1),
+       (1, 2),
+       (2, 1),
+       (2, 4),
+       (3, 3),
+       (3, 4),
+       (4, 4),
+       (4, 2);

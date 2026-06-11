@@ -14,11 +14,11 @@ import java.util.Set;
  */
 @Entity
 public class Project extends BaseEntity{
+    @Column(unique = true, nullable = false)
+    private Long projectNumber;
+
     @Column(nullable = false)
     private String name;
-
-    @Column
-    private LocalDate finishingDate;
 
     @Column(nullable = true, length = 50)
     private String customer;
@@ -27,8 +27,11 @@ public class Project extends BaseEntity{
     @Enumerated(value = EnumType.STRING)
     private Status status;
 
-    @OneToMany(mappedBy = "project", fetch = FetchType.LAZY)
-    private Set<Task> tasks = new HashSet<>();
+    @Column(nullable = false)
+    private LocalDate startDate;
+
+    @Column
+    private LocalDate endDate;
 
     @ManyToMany(
             cascade = {CascadeType.PERSIST, CascadeType.MERGE}
@@ -49,9 +52,28 @@ public class Project extends BaseEntity{
     public Project() {
     }
 
-    public Project(String name, LocalDate finishingDate) {
+    public Project(Long projectNumber, String name, String customer, Status status, LocalDate startDate, LocalDate endDate, List<Employee> employees, Group group) {
+        this.projectNumber = projectNumber;
         this.name = name;
-        this.finishingDate = finishingDate;
+        this.customer = customer;
+        this.status = status;
+        this.startDate = startDate;
+        this.endDate = endDate;
+        this.employees = employees;
+        this.group = group;
+    }
+
+    public Project(String name, LocalDate startDate) {
+        this.name = name;
+        this.startDate = startDate;
+    }
+
+    public Long getProjectNumber() {
+        return projectNumber;
+    }
+
+    public void setProjectNumber(Long projectNumber) {
+        this.projectNumber = projectNumber;
     }
 
     public String getName() {
@@ -62,14 +84,6 @@ public class Project extends BaseEntity{
         this.name = name;
     }
 
-    public LocalDate getFinishingDate() {
-        return finishingDate;
-    }
-
-    public void setFinishingDate(LocalDate finishingDate) {
-        this.finishingDate = finishingDate;
-    }
-
     public String getCustomer() {
         return customer;
     }
@@ -78,12 +92,28 @@ public class Project extends BaseEntity{
         this.customer = customer;
     }
 
-    public Set<Task> getTasks() {
-        return tasks;
+    public Status getStatus() {
+        return status;
     }
 
-    public void setTasks(Set<Task> tasks) {
-        this.tasks = tasks;
+    public void setStatus(Status status) {
+        this.status = status;
+    }
+
+    public LocalDate getStartDate() {
+        return startDate;
+    }
+
+    public void setStartDate(LocalDate startDate) {
+        this.startDate = startDate;
+    }
+
+    public LocalDate getEndDate() {
+        return endDate;
+    }
+
+    public void setEndDate(LocalDate endDate) {
+        this.endDate = endDate;
     }
 
     public List<Employee> getEmployees() {
@@ -101,14 +131,4 @@ public class Project extends BaseEntity{
     public void setGroup(Group group) {
         this.group = group;
     }
-
-    public Status getStatus() {
-        return status;
-    }
-
-    public void setStatus(Status status) {
-        this.status = status;
-    }
-
-    // helper methods
 }

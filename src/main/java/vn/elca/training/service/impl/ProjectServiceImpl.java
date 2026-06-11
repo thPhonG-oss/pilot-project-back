@@ -74,7 +74,6 @@ public class ProjectServiceImpl implements ProjectService {
                 .orElseThrow(() -> new ProjectNotFoundException("Project not found with id: " + id));
 
         targetProject.setName(projectDto.getName());
-        targetProject.setFinishingDate(projectDto.getFinishingDate());
         targetProject.setCustomer(projectDto.getCustomer());
 
         return projectRepository.save(targetProject);
@@ -91,17 +90,9 @@ public class ProjectServiceImpl implements ProjectService {
         Project newMaintennanceProject = new Project();
         newMaintennanceProject.setName(buildMaintenanceProjectName(oldProject));
         newMaintennanceProject.setCustomer(oldProject.getCustomer());
-        newMaintennanceProject.setFinishingDate(oldProject.getFinishingDate());
         Project savedProject =  projectRepository.save(newMaintennanceProject);
 
-        // update activated of the old project
-        oldProject.setActivated(false);
         projectRepository.save(oldProject);
-
-        log.info("New maintenance project created: name={}, activated={}",
-                savedProject.getName(), savedProject.isActivated());
-        log.info("Old project deactivated: id={}, name={}",
-                oldProject.getId(), oldProject.getName());
 
         return savedProject;
     }
