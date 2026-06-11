@@ -1,5 +1,6 @@
 package vn.elca.training.web;
 
+import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,8 +28,29 @@ import java.util.stream.Collectors;
 public class ProjectController extends AbstractApplicationController {
 
     private static final Logger log = LoggerFactory.getLogger(ProjectController.class);
-    @Autowired
-    private ProjectService projectService;
+
+    private final ProjectService projectService;
+
+    public ProjectController(ProjectService projectService) {
+        this.projectService = projectService;
+    }
+
+    @GetMapping
+    public PageResponse<ProjectDto> findAllProjects(){
+        Page<Project> projectPage = projectService.findAll();
+        List<ProjectDto> content = projectPage.getContent()
+                .stream()
+                .map(ProjectMapper.INSTANCE::toProjectDto)
+                .collect(Collectors.toList());
+
+        return new PageResponse<>(
+                projectPage.getNumber() + 1,
+                projectPage.getNumberOfElements(),
+                content,
+                projectPage.getTotalPages(),
+                projectPage.getTotalElements(),
+                projectPage.isLast());
+    }
 
     @GetMapping("/search")
     public PageResponse<ProjectDto> search(

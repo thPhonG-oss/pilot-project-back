@@ -14,7 +14,7 @@ import vn.elca.training.model.entity.Project;
  */
 public interface ProjectService {
 
-    List<Project> findAll();
+    Page<Project> findAll();
 
     long count();
 

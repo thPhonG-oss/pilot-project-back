@@ -29,6 +29,9 @@ public class ProjectServiceImpl implements ProjectService {
     @PersistenceContext
     private EntityManager em;
 
+    private static final String PROJECT_DEFAULT_SORT_BY = "projectNumber";
+    private static final String PROJECT_DEFAULT_SORT_DIR = "ASC";
+
     private static final Logger log = LoggerFactory.getLogger(ProjectServiceImpl.class);
     private ProjectRepository projectRepository;
 
@@ -37,8 +40,9 @@ public class ProjectServiceImpl implements ProjectService {
     }
 
     @Override
-    public List<Project> findAll() {
-        return projectRepository.findAll();
+    public Page<Project> findAll() {
+        Pageable pageable = PaginationUtil.buildPaginationWithCustomSorting(PROJECT_DEFAULT_SORT_BY, PROJECT_DEFAULT_SORT_DIR);
+        return projectRepository.findAll(pageable);
     }
 
     @Override

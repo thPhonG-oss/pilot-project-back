@@ -18,11 +18,4 @@ public class PageResponse <T>{
     private long totalElements;
 
     private boolean isLast;
-
-    public PageResponse(List<T> data, int totalPages, long totalElements, boolean isLast) {
-        this.data = data;
-        this.totalPages = totalPages;
-        this.totalElements = totalElements;
-        this.isLast = isLast;
-    }
 }
