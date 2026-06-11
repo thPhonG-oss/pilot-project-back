@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import vn.elca.training.model.dto.ProjectDto;
 import vn.elca.training.model.entity.Project;
+import vn.elca.training.model.entity.Status;
 import vn.elca.training.model.exception.ProjectNotFoundException;
 import vn.elca.training.repository.ProjectRepository;
 import vn.elca.training.service.ProjectService;
@@ -99,6 +100,11 @@ public class ProjectServiceImpl implements ProjectService {
         projectRepository.save(oldProject);
 
         return savedProject;
+    }
+
+    @Override
+    public Page<Project> findProjectsByCriteria(String keyword, Status status, Pageable pageable) {
+        return  projectRepository.findProjectsByCriteria(keyword, status, pageable);
     }
 
     private String buildMaintenanceProjectName(Project oldProject){

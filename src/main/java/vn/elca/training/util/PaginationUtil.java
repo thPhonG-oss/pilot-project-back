@@ -40,7 +40,14 @@ public class PaginationUtil {
         return PageRequest.of(DEFAULT_PAGE - 1, DEFAULT_SIZE, sort);
     }
 
-    public static Pageable buildCustomPagination(int page, int size, String sortBy, String sortDir){
+    public static  Pageable buildCustomPaginatinWithPageAndSize(int page, int size){
+        int validPage = page < DEFAULT_PAGE ? DEFAULT_PAGE : Math.min(page - 1, MAX_PAGE);
+        int validSize = size < DEFAULT_SIZE ? DEFAULT_SIZE : Math.min(size, MAX_SIZE);
+
+        return PageRequest.of(validPage, validSize);
+    }
+
+    public static Pageable buildFullCustomPagination(int page, int size, String sortBy, String sortDir){
 
         int validPage = page < DEFAULT_PAGE ? DEFAULT_PAGE : Math.min(page - 1, MAX_PAGE);
         int validSize = size < DEFAULT_SIZE ? DEFAULT_SIZE : Math.min(size, MAX_SIZE);

@@ -7,6 +7,7 @@ import org.springframework.data.querydsl.QuerydslPredicateExecutor;
 import org.springframework.stereotype.Repository;
 
 import vn.elca.training.model.entity.Project;
+import vn.elca.training.repository.custom.ProjectRepositoryCustom;
 
 import java.util.List;
 import java.util.Optional;
@@ -16,6 +17,6 @@ import java.util.Optional;
  *
  */
 @Repository
-public interface ProjectRepository extends JpaRepository<Project, Long>, QuerydslPredicateExecutor<Project> {
+public interface ProjectRepository extends JpaRepository<Project, Long>, QuerydslPredicateExecutor<Project>, ProjectRepositoryCustom {
     Page<Project> findAllByNameContainingIgnoreCase(String name, Pageable pageable);
 }

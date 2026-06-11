@@ -5,13 +5,17 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import vn.elca.training.mapper.ProjectMapper;
 import vn.elca.training.model.dto.PageResponse;
 import vn.elca.training.model.dto.ProjectDto;
 import vn.elca.training.model.entity.Project;
+import vn.elca.training.model.entity.Status;
 import vn.elca.training.service.ProjectService;
+import vn.elca.training.util.PaginationUtil;
 
 import javax.validation.Valid;
 import javax.validation.constraints.Min;
@@ -54,9 +58,15 @@ public class ProjectController extends AbstractApplicationController {
 
     @GetMapping("/search")
     public PageResponse<ProjectDto> search(
-            @RequestParam(required = false) String keyword
-    ) {
-        Page<Project> projectPage = projectService.findAllProjectsContainingIgnoreCase(keyword);
+            @RequestParam(required = false) String keyword,
+            @RequestParam(required = false) Status status,
+            @RequestParam(required = false, defaultValue = "1") int page,
+            @RequestParam(required = false, defaultValue = "10") int size
+            ) {
+
+        Pageable pageable = PaginationUtil.buildCustomPaginatinWithPageAndSize(page, size);
+
+        Page<Project> projectPage = projectService.findProjectsByCriteria(keyword, status, pageable);
         List<ProjectDto> content = projectPage.getContent()
                 .stream()
                 .map(ProjectMapper.INSTANCE::toProjectDto)
@@ -83,10 +93,5 @@ public class ProjectController extends AbstractApplicationController {
     ){
         log.info("Project name: {}", projectDto.getName());
         return mapper.projectToProjectDto(projectService.updateProject(id, projectDto));
-    }
-
-    @PostMapping("/{oldProjectId}")
-    public ProjectDto createMaintenanceProject(@Valid @PathVariable Long oldProjectId){
-        return mapper.projectToProjectDto(projectService.createMaintennanceProject(oldProjectId));
     }
 }
