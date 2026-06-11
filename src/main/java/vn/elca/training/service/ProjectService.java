@@ -4,9 +4,12 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.transaction.annotation.Transactional;
 import vn.elca.training.model.dto.ProjectDto;
-import vn.elca.training.model.dto.request.ProjectRequestDto;
+import vn.elca.training.model.dto.request.ProjectCreationRequest;
+import vn.elca.training.model.dto.request.ProjectUpdateRequest;
 import vn.elca.training.model.entity.Project;
 import vn.elca.training.model.entity.Status;
+
+import javax.validation.Valid;
 
 /**
  * @author vlp
@@ -22,12 +25,12 @@ public interface ProjectService {
 
     Project findProjectById(Long id);
 
-    Project updateProject(Long id, ProjectRequestDto updateRequest);
+    Project updateProject(Long id, @Valid ProjectUpdateRequest updateRequest);
 
     @Transactional(rollbackFor = Exception.class)
     Project createMaintennanceProject(Long oldProjectId);
 
     Page<Project> findProjectsByCriteria(String keyword, Status status, Pageable pageable);
 
-    ProjectDto createProject(ProjectRequestDto request);
+    ProjectDto createProject(ProjectCreationRequest request);
 }

@@ -9,7 +9,8 @@ import org.springframework.web.bind.annotation.*;
 import vn.elca.training.mapper.ProjectMapper;
 import vn.elca.training.model.dto.PageResponse;
 import vn.elca.training.model.dto.ProjectDto;
-import vn.elca.training.model.dto.request.ProjectRequestDto;
+import vn.elca.training.model.dto.request.ProjectCreationRequest;
+import vn.elca.training.model.dto.request.ProjectUpdateRequest;
 import vn.elca.training.model.entity.Project;
 import vn.elca.training.model.entity.Status;
 import vn.elca.training.service.ProjectService;
@@ -38,7 +39,7 @@ public class ProjectController extends AbstractApplicationController {
     }
 
     @PostMapping
-    public ProjectDto createProject(@Valid @RequestBody ProjectRequestDto request){
+    public ProjectDto createProject(@Valid @RequestBody ProjectCreationRequest request){
         return projectService.createProject(request);
     }
 
@@ -92,7 +93,7 @@ public class ProjectController extends AbstractApplicationController {
     @PutMapping("/{id}")
     public ProjectDto updateProject(
             @Min(value = 1L, message = "Project ID must be a positive integer") @PathVariable Long id,
-            @Valid @RequestBody ProjectRequestDto updateRequest
+            @RequestBody @Valid ProjectUpdateRequest updateRequest
     ){
         log.info("Project name: {}", updateRequest.getName());
         return ProjectMapper.INSTANCE.toProjectDto(projectService.updateProject(id, updateRequest));

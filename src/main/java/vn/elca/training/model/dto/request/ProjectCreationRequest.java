@@ -4,8 +4,6 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import vn.elca.training.model.entity.Status;
-
 import javax.validation.constraints.Min;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
@@ -14,7 +12,7 @@ import java.util.List;
 
 @Getter @Setter
 @NoArgsConstructor @AllArgsConstructor
-public class ProjectRequestDto {
+public class ProjectCreationRequest {
 
     @NotNull(message = "{project.number.required}")
     @Min(value = 1L, message = "{project.number.positive}")
@@ -25,9 +23,6 @@ public class ProjectRequestDto {
 
     @NotBlank(message = "{project.customer.required}")
     private String customer;
-
-    @NotNull(message = "{project.status.required}")
-    private Status status;
 
     @NotNull(message = "{project.startDate.required}")
     private LocalDate startDate;

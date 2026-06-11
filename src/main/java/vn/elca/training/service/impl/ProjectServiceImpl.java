@@ -9,7 +9,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import vn.elca.training.mapper.ProjectMapper;
 import vn.elca.training.model.dto.ProjectDto;
-import vn.elca.training.model.dto.request.ProjectRequestDto;
+import vn.elca.training.model.dto.request.ProjectCreationRequest;
+import vn.elca.training.model.dto.request.ProjectUpdateRequest;
 import vn.elca.training.model.entity.Employee;
 import vn.elca.training.model.entity.Group;
 import vn.elca.training.model.entity.Project;
@@ -25,6 +26,7 @@ import vn.elca.training.util.PaginationUtil;
 
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
+import javax.validation.Valid;
 import java.time.LocalDate;
 import java.util.HashMap;
 import java.util.List;
@@ -87,15 +89,11 @@ public class ProjectServiceImpl implements ProjectService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public Project updateProject(Long id, ProjectRequestDto updateRequest) {
+    public Project updateProject(Long id, @Valid ProjectUpdateRequest updateRequest) {
         log.info("Update info for project with id: {}", id);
 
         Project targetProject = projectRepository.findById(id)
                 .orElseThrow(() -> new BusinessException(ErrorCode.PROJECT_NOT_FOUND));
-
-        if(!targetProject.getProjectNumber().equals(updateRequest.getProjectNumber())){
-            throw new BusinessException(ErrorCode.PROJECT_NUMBER_NOT_CHANGE);
-        }
 
         if(updateRequest.getEndDate() != null && !updateRequest.getStartDate().isBefore(updateRequest.getEndDate())){
             throw new BusinessException(ErrorCode.INVALID_END_DATE);
@@ -145,7 +143,7 @@ public class ProjectServiceImpl implements ProjectService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public ProjectDto createProject(ProjectRequestDto request){
+    public ProjectDto createProject(ProjectCreationRequest request){
         if (projectRepository.existsByProjectNumber(request.getProjectNumber())) {
             throw new BusinessException(ErrorCode.PROJECT_NUMBER_EXISTS);
         }
@@ -162,10 +160,6 @@ public class ProjectServiceImpl implements ProjectService {
         project.setName(request.getName());
         project.setCustomer(request.getCustomer());
 
-        // handle status
-        if(request.getStatus() == null || !Status.NEW.equals(request.getStatus())){
-            throw new BusinessException(ErrorCode.INVALID_NEW_PROJECT_STATUS);
-        }
         project.setStatus(Status.NEW);
 
         project.setStartDate(request.getStartDate());
