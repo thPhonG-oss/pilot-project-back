@@ -23,10 +23,10 @@ public class Project extends BaseEntity{
     @Column(unique = true, nullable = false)
     private Long projectNumber;
 
-    @Column(nullable = false)
+    @Column(nullable = false, length = 50)
     private String name;
 
-    @Column(nullable = true, length = 50)
+    @Column(nullable = false, length = 50)
     private String customer;
 
     @Column

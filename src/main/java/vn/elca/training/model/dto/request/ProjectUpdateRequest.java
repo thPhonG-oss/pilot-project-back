@@ -4,6 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.hibernate.validator.constraints.Length;
 import vn.elca.training.model.entity.Status;
 
 import javax.validation.constraints.NotBlank;
@@ -15,9 +16,11 @@ import java.util.List;
 @NoArgsConstructor @AllArgsConstructor
 public class ProjectUpdateRequest {
     @NotBlank(message = "{project.name.required}")
+    @Length(max = 50, message = "{project.name.length}")
     private String name;
 
     @NotBlank(message = "{project.customer.required}")
+    @Length(max = 50, message = "{project.customer.length}")
     private String customer;
 
     @NotNull(message = "{project.status.required}")
