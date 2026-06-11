@@ -1,11 +1,18 @@
 package vn.elca.training.model.entity;
 
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
 import javax.persistence.*;
 import java.util.ArrayList;
 import java.util.List;
 
 @Entity
 @Table(name = "groups")
+@Getter @Setter
+@NoArgsConstructor @AllArgsConstructor
 public class Group extends BaseEntity{
     @OneToOne(
             fetch = FetchType.LAZY,
@@ -19,26 +26,4 @@ public class Group extends BaseEntity{
             cascade = {CascadeType.PERSIST, CascadeType.MERGE}
     )
     private List<Project> projects = new ArrayList<>();
-
-    public Group() {}
-
-    public Group(Employee leader) {
-        this.leader = leader;
-    }
-
-    public Employee getLeader() {
-        return leader;
-    }
-
-    public void setLeader(Employee leader) {
-        this.leader = leader;
-    }
-
-    public List<Project> getProjects() {
-        return projects;
-    }
-
-    public void setProjects(List<Project> projects) {
-        this.projects = projects;
-    }
 }

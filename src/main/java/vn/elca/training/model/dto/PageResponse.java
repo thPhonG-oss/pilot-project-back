@@ -1,8 +1,18 @@
 package vn.elca.training.model.dto;
 
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
 import java.util.List;
 
+@Getter @Setter
+@NoArgsConstructor @AllArgsConstructor
 public class PageResponse <T>{
+    private int pageNumber;
+    private int pageSize;
+
     private List<T> data;
     private int totalPages;
     private long totalElements;
@@ -14,37 +24,5 @@ public class PageResponse <T>{
         this.totalPages = totalPages;
         this.totalElements = totalElements;
         this.isLast = isLast;
-    }
-
-    public List<T> getData() {
-        return data;
-    }
-
-    public void setData(List<T> data) {
-        this.data = data;
-    }
-
-    public int getTotalPages() {
-        return totalPages;
-    }
-
-    public void setTotalPages(int totalPages) {
-        this.totalPages = totalPages;
-    }
-
-    public long getTotalElements() {
-        return totalElements;
-    }
-
-    public void setTotalElements(long totalElements) {
-        this.totalElements = totalElements;
-    }
-
-    public boolean isLast() {
-        return isLast;
-    }
-
-    public void setLast(boolean last) {
-        isLast = last;
     }
 }

@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+import vn.elca.training.mapper.ProjectMapper;
 import vn.elca.training.model.dto.PageResponse;
 import vn.elca.training.model.dto.ProjectDto;
 import vn.elca.training.model.entity.Project;
@@ -36,10 +37,12 @@ public class ProjectController extends AbstractApplicationController {
         Page<Project> projectPage = projectService.findAllProjectsContainingIgnoreCase(keyword);
         List<ProjectDto> content = projectPage.getContent()
                 .stream()
-                .map(mapper::projectToProjectDto)
+                .map(ProjectMapper.INSTANCE::toProjectDto)
                 .collect(Collectors.toList());
 
         return new PageResponse<>(
+                projectPage.getNumber() + 1,
+                projectPage.getNumberOfElements(),
                 content,
                 projectPage.getTotalPages(),
                 projectPage.getTotalElements(),
