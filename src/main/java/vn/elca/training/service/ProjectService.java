@@ -22,7 +22,7 @@ public interface ProjectService {
 
     Project findProjectById(Long id);
 
-    Project updateProject(Long id, ProjectDto projectDto);
+    Project updateProject(Long id, ProjectRequestDto updateRequest);
 
     @Transactional(rollbackFor = Exception.class)
     Project createMaintennanceProject(Long oldProjectId);

@@ -26,7 +26,9 @@ import vn.elca.training.util.PaginationUtil;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import java.time.LocalDate;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * @author vlp
@@ -85,14 +87,30 @@ public class ProjectServiceImpl implements ProjectService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public Project updateProject(Long id, ProjectDto projectDto) {
+    public Project updateProject(Long id, ProjectRequestDto updateRequest) {
         log.info("Update info for project with id: {}", id);
 
         Project targetProject = projectRepository.findById(id)
-                .orElseThrow(() -> new ProjectNotFoundException("Project not found with id: " + id));
+                .orElseThrow(() -> new BusinessException(ErrorCode.PROJECT_NOT_FOUND));
 
-        targetProject.setName(projectDto.getName());
-        targetProject.setCustomer(projectDto.getCustomer());
+        if(!targetProject.getProjectNumber().equals(updateRequest.getProjectNumber())){
+            throw new BusinessException(ErrorCode.PROJECT_NUMBER_NOT_CHANGE);
+        }
+
+        if(updateRequest.getEndDate() != null && !updateRequest.getStartDate().isBefore(updateRequest.getEndDate())){
+            throw new BusinessException(ErrorCode.INVALID_END_DATE);
+        }
+
+        Group group = groupService.findById(updateRequest.getGroupId());
+        List<Employee> employees = employeeService.findEmployeesByVisas(updateRequest.getVisas());
+
+        targetProject.setName(updateRequest.getName());
+        targetProject.setCustomer(updateRequest.getCustomer());
+        targetProject.setStatus(updateRequest.getStatus());
+        targetProject.setStartDate(updateRequest.getStartDate());
+        targetProject.setEndDate(updateRequest.getEndDate());
+        targetProject.setEmployees(employees);
+        targetProject.setGroup(group);
 
         return projectRepository.save(targetProject);
     }
@@ -158,6 +176,16 @@ public class ProjectServiceImpl implements ProjectService {
         Project savedProject = projectRepository.save(project);
 
         return ProjectMapper.INSTANCE.toProjectDto(savedProject);
+    }
+
+    private Map<Status, Integer> buildStatusOrder(){
+        Map<Status, Integer> statusOrder = new HashMap<>();
+        statusOrder.put(Status.NEW, 1);
+        statusOrder.put(Status.PLA, 2);
+        statusOrder.put(Status.INP, 3);
+        statusOrder.put(Status.FIN, 4);
+
+        return statusOrder;
     }
 
 }

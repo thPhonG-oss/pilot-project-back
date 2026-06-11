@@ -12,7 +12,10 @@ public enum ErrorCode {
     VISAS_NOT_FOUND("1004", "project.visas.notFound"),
     EMPLOYEE_NOT_FOUND("1005", "employee.visa.notFound"),
     GROUP_NOT_FOUND("1006", "group.id.notFound"),
-    INVALID_NEW_PROJECT_STATUS("1007", "project.create.invalidStatus")
+    INVALID_NEW_PROJECT_STATUS("1007", "project.create.invalidStatus"),
+    PROJECT_NUMBER_NOT_CHANGE("1008", "project.update.projectNumber"),
+    STATUS_NOT_ROLLBACK("1009", "project.update.statusNotRollback")
+
     ;
 
     private final String code;

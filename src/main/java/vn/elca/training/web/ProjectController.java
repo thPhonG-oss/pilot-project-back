@@ -92,9 +92,9 @@ public class ProjectController extends AbstractApplicationController {
     @PutMapping("/{id}")
     public ProjectDto updateProject(
             @Min(value = 1L, message = "Project ID must be a positive integer") @PathVariable Long id,
-            @Valid @RequestBody ProjectDto projectDto
+            @Valid @RequestBody ProjectRequestDto updateRequest
     ){
-        log.info("Project name: {}", projectDto.getName());
-        return ProjectMapper.INSTANCE.toProjectDto(projectService.updateProject(id, projectDto));
+        log.info("Project name: {}", updateRequest.getName());
+        return ProjectMapper.INSTANCE.toProjectDto(projectService.updateProject(id, updateRequest));
     }
 }
