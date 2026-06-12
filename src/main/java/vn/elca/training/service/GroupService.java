@@ -2,8 +2,10 @@ package vn.elca.training.service;
 
 import vn.elca.training.model.entity.Group;
 
-import java.util.Optional;
+import java.util.List;
 
 public interface GroupService {
     Group findById(Long id);
+
+    List<Group> findAll();
 }
