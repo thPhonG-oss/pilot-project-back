@@ -11,7 +11,7 @@ import java.util.Set;
 public class PaginationUtil {
     private static final int DEFAULT_PAGE = 1;
     private static final int MAX_PAGE = 50;
-    private static final int DEFAULT_SIZE = 5;
+    private static final int DEFAULT_SIZE = 20;
     private static final int MAX_SIZE = 50;
     private static final String DEFAULT_SORT_BY = "id";
     private static final Set<String> ALLOWED_SORT_FIELDS;
@@ -29,6 +29,10 @@ public class PaginationUtil {
     public static Pageable buildDefaultPagination(){
         Sort sort = Sort.by(DEFAULT_SORT_BY).ascending();
         return PageRequest.of(DEFAULT_PAGE - 1, DEFAULT_SIZE, sort);
+    }
+
+    public static Pageable buildDefaultPageSizePagination(){
+        return PageRequest.of(DEFAULT_PAGE-1, DEFAULT_SIZE);
     }
 
     public static Pageable buildPaginationWithCustomSorting(String sortBy, String sortDir){

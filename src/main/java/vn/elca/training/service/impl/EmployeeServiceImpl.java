@@ -6,7 +6,9 @@ import vn.elca.training.model.exception.BusinessException;
 import vn.elca.training.model.exception.ErrorCode;
 import vn.elca.training.repository.EmployeeRepository;
 import vn.elca.training.service.EmployeeService;
+import vn.elca.training.util.PaginationUtil;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
@@ -55,5 +57,12 @@ public class EmployeeServiceImpl implements EmployeeService {
     @Override
     public Employee findByVisa(String visa){
         return employeeRepository.findByVisa(visa).orElseThrow(() -> new BusinessException(ErrorCode.EMPLOYEE_NOT_FOUND));
+    }
+
+    @Override
+    public List<Employee> suggestEmployees(String keyword){
+        List<Employee> employees = new ArrayList<>();
+        if(keyword == null || keyword.trim().isEmpty()) return employees;
+        return employeeRepository.suggest(keyword.trim(), PaginationUtil.buildDefaultPageSizePagination());
     }
 }

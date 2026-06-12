@@ -8,4 +8,6 @@ public interface EmployeeService {
     List<Employee> findEmployeesByVisas(List<String> visas);
 
     Employee findByVisa(String visa);
+
+    List<Employee> suggestEmployees(String keyword);
 }
