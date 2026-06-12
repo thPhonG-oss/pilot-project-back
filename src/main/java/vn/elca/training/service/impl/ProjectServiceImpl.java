@@ -8,7 +8,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import vn.elca.training.mapper.ProjectMapper;
-import vn.elca.training.model.dto.ProjectDto;
+import vn.elca.training.model.dto.response.ProjectDto;
 import vn.elca.training.model.dto.request.ProjectCreationRequest;
 import vn.elca.training.model.dto.request.ProjectUpdateRequest;
 import vn.elca.training.model.entity.Employee;

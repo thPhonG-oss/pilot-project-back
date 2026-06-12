@@ -1,4 +1,4 @@
-package vn.elca.training.model.dto;
+package vn.elca.training.model.dto.response;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;

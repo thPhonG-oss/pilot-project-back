@@ -1,7 +1,7 @@
 package vn.elca.training.util;
 
 import org.springframework.stereotype.Component;
-import vn.elca.training.model.dto.ProjectDto;
+import vn.elca.training.model.dto.response.ProjectDto;
 import vn.elca.training.model.entity.Project;
 
 /**
