@@ -1,7 +1,6 @@
 package vn.elca.training.repository.custom;
 
 import com.querydsl.core.BooleanBuilder;
-import com.querydsl.core.QueryFactory;
 import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.jpa.impl.JPAQuery;
 import org.springframework.data.domain.Page;
@@ -10,11 +9,8 @@ import org.springframework.data.domain.Pageable;
 import vn.elca.training.model.entity.Project;
 import vn.elca.training.model.entity.QProject;
 import vn.elca.training.model.entity.Status;
-import vn.elca.training.util.ApplicationUtils;
-import vn.elca.training.util.PaginationUtil;
 
 import javax.persistence.EntityManager;
-import javax.persistence.PersistenceContext;
 import java.util.List;
 
 public class ProjectRepositoryCustomImpl implements ProjectRepositoryCustom{
@@ -57,11 +53,9 @@ public class ProjectRepositoryCustomImpl implements ProjectRepositoryCustom{
             String value = keyword.trim();
 
             BooleanExpression condition = project.name.containsIgnoreCase(value)
-                    .or(project.customer.containsIgnoreCase(value));
-
-            if (ApplicationUtils.isLong(value)) {
-                condition = condition.or(project.projectNumber.eq(Long.valueOf(value)));
-            }
+                    .or(project.customer.containsIgnoreCase(value))
+                    .or(project.projectNumber.stringValue().contains(value))
+                    ;
 
             builder.and(condition);
         }
