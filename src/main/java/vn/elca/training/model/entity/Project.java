@@ -29,7 +29,7 @@ public class Project extends BaseEntity{
     @Column(nullable = false, length = 50)
     private String customer;
 
-    @Column
+    @Column(nullable = false)
     @Enumerated(value = EnumType.STRING)
     private Status status;
 
