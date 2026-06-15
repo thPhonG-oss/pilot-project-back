@@ -62,13 +62,13 @@ public class ProjectController extends AbstractApplicationController {
 
     @GetMapping("/search")
     public PageResponse<ProjectDto> search(
-            @RequestParam(required = false) String keyword,
-            @RequestParam(required = false) Status status,
-            @RequestParam(required = false, defaultValue = "1") int page,
-            @RequestParam(required = false, defaultValue = "10") int size
+            @RequestParam(required = false) final String keyword,
+            @RequestParam(required = false) final Status status,
+            @RequestParam(required = false, defaultValue = "1") final int page,
+            @RequestParam(required = false, defaultValue = "10") final int size
             ) {
 
-        Pageable pageable = PaginationUtil.buildCustomPaginatinWithPageAndSize(page, size);
+        Pageable pageable = PaginationUtil.buildCustomPaginationWithPageAndSize(page, size);
 
         Page<Project> projectPage = projectService.findProjectsByCriteria(keyword, status, pageable);
         List<ProjectDto> content = projectPage.getContent()
@@ -86,14 +86,14 @@ public class ProjectController extends AbstractApplicationController {
     }
 
     @GetMapping("/{id}")
-    public ProjectDto findProjectById(@Min(value = 1L, message = "Project ID must be a positive integer") @PathVariable Long id) {
+    public ProjectDto findProjectById(@Min(value = 1L, message = "Project ID must be a positive integer") @PathVariable final Long id) {
         return ProjectMapper.INSTANCE.toProjectDto(projectService.findProjectById(id));
     }
 
     @PutMapping("/{id}")
     public ProjectDto updateProject(
-            @Min(value = 1L, message = "Project ID must be a positive integer") @PathVariable Long id,
-            @RequestBody @Valid ProjectUpdateRequest updateRequest
+            @Min(value = 1L, message = "Project ID must be a positive integer") @PathVariable final Long id,
+            @RequestBody @Valid final ProjectUpdateRequest updateRequest
     ){
         log.info("Project name: {}", updateRequest.getName());
         return ProjectMapper.INSTANCE.toProjectDto(projectService.updateProject(id, updateRequest));

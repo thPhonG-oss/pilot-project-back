@@ -20,10 +20,8 @@ public class ProjectDto {
 
     private Long projectNumber;
 
-    @NotBlank(message = "Project name must not be blank")
     private String name;
 
-    @NotBlank(message = "Customer name must not be null")
     private String customer;
 
     private Status status;

@@ -53,9 +53,13 @@ public class ProjectRepositoryCustomImpl implements ProjectRepositoryCustom{
             String value = keyword.trim();
 
             BooleanExpression condition = project.name.containsIgnoreCase(value)
-                    .or(project.customer.containsIgnoreCase(value))
-                    .or(project.projectNumber.stringValue().contains(value))
-                    ;
+                    .or(project.customer.containsIgnoreCase(value));
+            try {
+                Long.parseLong(value);
+                condition = condition.or(project.projectNumber.stringValue().contains(value));
+            }
+            catch (NumberFormatException ignored){
+            }
 
             builder.and(condition);
         }
@@ -63,7 +67,6 @@ public class ProjectRepositoryCustomImpl implements ProjectRepositoryCustom{
         if (status != null) {
             builder.and(project.status.eq(status));
         }
-
 
         return builder;
     }

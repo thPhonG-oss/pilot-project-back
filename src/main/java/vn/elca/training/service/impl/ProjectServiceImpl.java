@@ -69,19 +69,7 @@ public class ProjectServiceImpl implements ProjectService {
     }
 
     @Override
-    public Page<Project> findAllProjectsContainingIgnoreCase(String keyword) {
-
-        Pageable defaultPageable = PaginationUtil.buildDefaultPagination();
-
-        if(keyword == null || keyword.isEmpty()){
-            return projectRepository.findAll(defaultPageable);
-        }
-
-        return projectRepository.findAllByNameContainingIgnoreCase(keyword, defaultPageable);
-    }
-
-    @Override
-    public Project findProjectById(Long id) {
+    public Project findProjectById(final Long id) {
 
         return projectRepository.findById(id)
                 .orElseThrow(() -> new ProjectNotFoundException("Project not found with id: " + id));
@@ -89,7 +77,7 @@ public class ProjectServiceImpl implements ProjectService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public Project updateProject(Long id, @Valid ProjectUpdateRequest updateRequest) {
+    public Project updateProject(final Long id, final ProjectUpdateRequest updateRequest) {
         log.info("Update info for project with id: {}", id);
 
         Project targetProject = projectRepository.findById(id)
@@ -113,37 +101,14 @@ public class ProjectServiceImpl implements ProjectService {
         return projectRepository.save(targetProject);
     }
 
-    @Transactional(rollbackFor = Exception.class)
     @Override
-    public Project createMaintennanceProject(Long oldProjectId){
-        // check existing project
-        Project oldProject = projectRepository.findById(oldProjectId)
-                .orElseThrow(() -> new ProjectNotFoundException("Project not found with id: " + oldProjectId));
-
-        // create new maintenance project
-        Project newMaintennanceProject = new Project();
-        newMaintennanceProject.setName(buildMaintenanceProjectName(oldProject));
-        newMaintennanceProject.setCustomer(oldProject.getCustomer());
-        Project savedProject =  projectRepository.save(newMaintennanceProject);
-
-        projectRepository.save(oldProject);
-
-        return savedProject;
-    }
-
-    @Override
-    public Page<Project> findProjectsByCriteria(String keyword, Status status, Pageable pageable) {
+    public Page<Project> findProjectsByCriteria(final String keyword, final Status status, final Pageable pageable) {
         return  projectRepository.findProjectsByCriteria(keyword, status, pageable);
     }
 
-    private String buildMaintenanceProjectName(Project oldProject){
-
-        return oldProject.getName() + "Maint." + LocalDate.now().getYear();
-    }
-
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public ProjectDto createProject(ProjectCreationRequest request){
+    public ProjectDto createProject(final ProjectCreationRequest request){
         if (projectRepository.existsByProjectNumber(request.getProjectNumber())) {
             throw new BusinessException(ErrorCode.PROJECT_NUMBER_EXISTS);
         }
@@ -170,16 +135,6 @@ public class ProjectServiceImpl implements ProjectService {
         Project savedProject = projectRepository.save(project);
 
         return ProjectMapper.INSTANCE.toProjectDto(savedProject);
-    }
-
-    private Map<Status, Integer> buildStatusOrder(){
-        Map<Status, Integer> statusOrder = new HashMap<>();
-        statusOrder.put(Status.NEW, 1);
-        statusOrder.put(Status.PLA, 2);
-        statusOrder.put(Status.INP, 3);
-        statusOrder.put(Status.FIN, 4);
-
-        return statusOrder;
     }
 
 }

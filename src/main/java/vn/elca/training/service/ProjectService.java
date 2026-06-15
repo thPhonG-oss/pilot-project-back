@@ -21,14 +21,9 @@ public interface ProjectService {
 
     long count();
 
-    Page<Project> findAllProjectsContainingIgnoreCase(String keyword);
-
     Project findProjectById(Long id);
 
     Project updateProject(Long id, @Valid ProjectUpdateRequest updateRequest);
-
-    @Transactional(rollbackFor = Exception.class)
-    Project createMaintennanceProject(Long oldProjectId);
 
     Page<Project> findProjectsByCriteria(String keyword, Status status, Pageable pageable);
 

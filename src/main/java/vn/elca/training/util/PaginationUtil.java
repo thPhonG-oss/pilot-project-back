@@ -19,10 +19,8 @@ public class PaginationUtil {
     static {
         ALLOWED_SORT_FIELDS = new HashSet<>();
         ALLOWED_SORT_FIELDS.add("id");
-        ALLOWED_SORT_FIELDS.add("createdAt");
         ALLOWED_SORT_FIELDS.add("status");
-        ALLOWED_SORT_FIELDS.add("totalAmount");
-        ALLOWED_SORT_FIELDS.add("orderCode");
+        ALLOWED_SORT_FIELDS.add("name");
         ALLOWED_SORT_FIELDS.add("projectNumber");
     }
 
@@ -44,7 +42,7 @@ public class PaginationUtil {
         return PageRequest.of(DEFAULT_PAGE - 1, DEFAULT_SIZE, sort);
     }
 
-    public static  Pageable buildCustomPaginatinWithPageAndSize(int page, int size){
+    public static  Pageable buildCustomPaginationWithPageAndSize(int page, int size){
         int validPage = page < DEFAULT_PAGE ? DEFAULT_PAGE : Math.min(page - 1, MAX_PAGE);
         int validSize = size < DEFAULT_SIZE ? DEFAULT_SIZE : Math.min(size, MAX_SIZE);
 
