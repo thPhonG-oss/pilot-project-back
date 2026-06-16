@@ -23,6 +23,7 @@ import vn.elca.training.service.EmployeeService;
 import vn.elca.training.service.GroupService;
 import vn.elca.training.service.ProjectService;
 import vn.elca.training.util.PaginationUtil;
+import vn.elca.training.validator.ProjectValidator;
 
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
@@ -51,11 +52,15 @@ public class ProjectServiceImpl implements ProjectService {
     private final GroupService groupService;
     private final EmployeeService employeeService;
 
-    public ProjectServiceImpl(ProjectRepository projectRepository, GroupService groupService, EmployeeService employeeService) {
+    private final ProjectValidator projectValidator;
+
+    public ProjectServiceImpl(ProjectRepository projectRepository, GroupService groupService, EmployeeService employeeService, ProjectValidator projectValidator) {
         this.projectRepository = projectRepository;
         this.groupService = groupService;
         this.employeeService = employeeService;
+        this.projectValidator = projectValidator;
     }
+
 
     @Override
     public Page<Project> findAll() {
@@ -80,16 +85,14 @@ public class ProjectServiceImpl implements ProjectService {
     public Project updateProject(final Long id, final ProjectUpdateRequest updateRequest) {
         log.info("Update info for project with id: {}", id);
 
-        Project targetProject = projectRepository.findById(id)
-                .orElseThrow(() -> new BusinessException(ErrorCode.PROJECT_NOT_FOUND));
+        // 1. validate and return a target updated project
+        Project targetProject = projectValidator.validateUpdateProject(id, updateRequest);
 
-        if(updateRequest.getEndDate() != null && !updateRequest.getStartDate().isBefore(updateRequest.getEndDate())){
-            throw new BusinessException(ErrorCode.INVALID_END_DATE);
-        }
-
+        // 2. find target group and target employees
         Group group = groupService.findById(updateRequest.getGroupId());
         List<Employee> employees = employeeService.findEmployeesByVisas(updateRequest.getVisas());
 
+        // 3. update project info
         targetProject.setName(updateRequest.getName());
         targetProject.setCustomer(updateRequest.getCustomer());
         targetProject.setStatus(updateRequest.getStatus());
@@ -109,24 +112,19 @@ public class ProjectServiceImpl implements ProjectService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public ProjectDto createProject(final ProjectCreationRequest request){
-        if (projectRepository.existsByProjectNumber(request.getProjectNumber())) {
-            throw new BusinessException(ErrorCode.PROJECT_NUMBER_EXISTS);
-        }
+        // 1. validate project
+        projectValidator.validateCreateProject(request);
 
-        if(request.getEndDate() != null && !request.getStartDate().isBefore(request.getEndDate())){
-            throw new BusinessException(ErrorCode.INVALID_END_DATE);
-        }
-
+        // 2. find the target group and target employees
         Group group = groupService.findById(request.getGroupId());
         List<Employee> employees = employeeService.findEmployeesByVisas(request.getVisas());
 
+        // 3. create new project
         Project project = new Project();
         project.setProjectNumber(request.getProjectNumber());
         project.setName(request.getName());
         project.setCustomer(request.getCustomer());
-
-        project.setStatus(Status.NEW);
-
+        project.setStatus(Status.NEW); //the status is always 'NEW' when create new project
         project.setStartDate(request.getStartDate());
         project.setEndDate(request.getEndDate());
         project.setGroup(group);

@@ -21,11 +21,11 @@ public interface ProjectService {
 
     long count();
 
-    Project findProjectById(Long id);
+    Project findProjectById(final Long id);
 
-    Project updateProject(Long id, @Valid ProjectUpdateRequest updateRequest);
+    Project updateProject(final Long id, final @Valid ProjectUpdateRequest updateRequest);
 
-    Page<Project> findProjectsByCriteria(String keyword, Status status, Pageable pageable);
+    Page<Project> findProjectsByCriteria(final String keyword, final Status status, final Pageable pageable);
 
-    ProjectDto createProject(ProjectCreationRequest request);
+    ProjectDto createProject(final ProjectCreationRequest request);
 }
