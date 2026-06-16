@@ -87,7 +87,7 @@ public class ProjectController extends AbstractApplicationController {
 
     @GetMapping("/{id}")
     public ProjectDto findProjectById(@Min(value = 1L, message = "Project ID must be a positive integer") @PathVariable final Long id) {
-        return ProjectMapper.INSTANCE.toProjectDto(projectService.findProjectById(id));
+        return mapper.toProjectDto(projectService.findProjectById(id));
     }
 
     @PutMapping("/{id}")

@@ -76,7 +76,7 @@ public class ProjectServiceImpl implements ProjectService {
     @Override
     public Project findProjectById(final Long id) {
 
-        return projectRepository.findById(id)
+        return projectRepository.findProjectById(id)
                 .orElseThrow(() -> new ProjectNotFoundException("Project not found with id: " + id));
     }
 
