@@ -17,7 +17,6 @@ import vn.elca.training.model.entity.Project;
 import vn.elca.training.model.entity.Status;
 import vn.elca.training.model.exception.BusinessException;
 import vn.elca.training.model.exception.ErrorCode;
-import vn.elca.training.model.exception.ProjectNotFoundException;
 import vn.elca.training.repository.ProjectRepository;
 import vn.elca.training.service.EmployeeService;
 import vn.elca.training.service.GroupService;
@@ -25,13 +24,7 @@ import vn.elca.training.service.ProjectService;
 import vn.elca.training.util.PaginationUtil;
 import vn.elca.training.validator.ProjectValidator;
 
-import javax.persistence.EntityManager;
-import javax.persistence.PersistenceContext;
-import javax.validation.Valid;
-import java.time.LocalDate;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 /**
  * @author vlp
@@ -40,8 +33,6 @@ import java.util.Map;
 @Service
 @Profile("!dummy | dev")
 public class ProjectServiceImpl implements ProjectService {
-    @PersistenceContext
-    private EntityManager em;
 
     private static final String PROJECT_DEFAULT_SORT_BY = "projectNumber";
     private static final String PROJECT_DEFAULT_SORT_DIR = "ASC";
@@ -77,7 +68,7 @@ public class ProjectServiceImpl implements ProjectService {
     public Project findProjectById(final Long id) {
 
         return projectRepository.findProjectById(id)
-                .orElseThrow(() -> new ProjectNotFoundException("Project not found with id: " + id));
+                .orElseThrow(() -> new BusinessException(ErrorCode.PROJECT_NOT_FOUND));
     }
 
     @Override
@@ -124,7 +115,6 @@ public class ProjectServiceImpl implements ProjectService {
         project.setProjectNumber(request.getProjectNumber());
         project.setName(request.getName());
         project.setCustomer(request.getCustomer());
-        project.setStatus(Status.NEW); //the status is always 'NEW' when create new project
         project.setStartDate(request.getStartDate());
         project.setEndDate(request.getEndDate());
         project.setGroup(group);
@@ -134,5 +124,4 @@ public class ProjectServiceImpl implements ProjectService {
 
         return ProjectMapper.INSTANCE.toProjectDto(savedProject);
     }
-
 }

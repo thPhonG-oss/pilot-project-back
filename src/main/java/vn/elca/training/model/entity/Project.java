@@ -28,7 +28,7 @@ public class Project extends BaseEntity{
 
     @Column(nullable = false)
     @Enumerated(value = EnumType.STRING)
-    private Status status;
+    private Status status=Status.NEW;
 
     @Column(nullable = false)
     private LocalDate startDate;
@@ -37,7 +37,8 @@ public class Project extends BaseEntity{
     private LocalDate endDate;
 
     @ManyToMany(
-            cascade = {CascadeType.PERSIST, CascadeType.MERGE}
+            cascade = {CascadeType.PERSIST, CascadeType.MERGE},
+            fetch = FetchType.LAZY
     )
     @JoinTable(
             name = "project_employee",
