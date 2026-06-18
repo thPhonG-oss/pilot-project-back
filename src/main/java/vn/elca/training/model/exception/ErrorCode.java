@@ -14,7 +14,8 @@ public enum ErrorCode {
     GROUP_NOT_FOUND("1006", "group.id.notFound"),
     INVALID_NEW_PROJECT_STATUS("1007", "project.create.invalidStatus"),
     PROJECT_NUMBER_NOT_CHANGE("1008", "project.update.projectNumber"),
-    STATUS_NOT_ROLLBACK("1009", "project.update.statusNotRollback")
+    STATUS_NOT_ROLLBACK("1009", "project.update.statusNotRollback"),
+    PROJECT_DELETE_NOT_ALLOWED("1010", "project.delete.notAllowed")
 
     ;
 

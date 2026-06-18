@@ -13,7 +13,7 @@ import java.time.LocalDate;
 @Getter @Setter
 @NoArgsConstructor @AllArgsConstructor
 public class Employee extends BaseEntity{
-    @Column(unique = true, nullable = true, length = 3)
+    @Column(unique = true, nullable = false, length = 3)
     private String visa;
 
     @Column(nullable = false, length = 50)

@@ -10,6 +10,7 @@ import vn.elca.training.model.entity.Project;
 import vn.elca.training.model.entity.Status;
 
 import javax.validation.Valid;
+import java.util.List;
 
 /**
  * @author vlp
@@ -28,4 +29,8 @@ public interface ProjectService {
     Page<Project> findProjectsByCriteria(final String keyword, final Status status, final Pageable pageable);
 
     ProjectDto createProject(final ProjectCreationRequest request);
+
+    void deleteProject(final Long id);
+
+    void deleteProjects(final List<Long> ids);
 }

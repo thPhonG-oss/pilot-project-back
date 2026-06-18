@@ -25,6 +25,7 @@ import vn.elca.training.util.PaginationUtil;
 import vn.elca.training.validator.ProjectValidator;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * @author vlp
@@ -123,5 +124,27 @@ public class ProjectServiceImpl implements ProjectService {
         Project savedProject = projectRepository.save(project);
 
         return ProjectMapper.INSTANCE.toProjectDto(savedProject);
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void deleteProject(final Long id) {
+        log.info("Delete project with id: {}", id);
+
+        Project project = projectRepository.findById(id)
+                .orElseThrow(() -> new BusinessException(ErrorCode.PROJECT_NOT_FOUND));
+        projectValidator.validateDeleteProject(project);
+        projectRepository.delete(project);
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void deleteProjects(final List<Long> ids) {
+        List<Long> distinctIds = ids.stream().distinct().collect(Collectors.toList());
+        log.info("Delete projects with ids: {}", distinctIds);
+
+        List<Project> projects = projectRepository.findAllById(distinctIds);
+        projectValidator.validateDeleteProjects(projects, distinctIds);
+        projectRepository.deleteAll(projects);
     }
 }

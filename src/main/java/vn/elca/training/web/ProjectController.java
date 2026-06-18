@@ -4,9 +4,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import vn.elca.training.mapper.ProjectMapper;
+import vn.elca.training.model.dto.request.ProjectDeleteRequest;
 import vn.elca.training.model.dto.response.PageResponse;
 import vn.elca.training.model.dto.response.ProjectDto;
 import vn.elca.training.model.dto.request.ProjectCreationRequest;
@@ -97,5 +99,19 @@ public class ProjectController extends AbstractApplicationController {
     ){
         log.info("Project name: {}", updateRequest.getName());
         return ProjectMapper.INSTANCE.toProjectDto(projectService.updateProject(id, updateRequest));
+    }
+
+    @DeleteMapping("/{id}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void deleteProject(
+            @Min(value = 1L, message = "{project.id.positive}") @PathVariable final Long id
+    ) {
+        projectService.deleteProject(id);
+    }
+
+    @DeleteMapping
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void deleteProjects(@Valid @RequestBody final ProjectDeleteRequest request) {
+        projectService.deleteProjects(request.getIds());
     }
 }
