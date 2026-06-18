@@ -21,11 +21,11 @@ public class ProjectCreationRequest {
     private Long projectNumber;
 
     @NotBlank(message = "{project.name.required}")
-    @Length(max = 50, message = "{project.name.length}")
+    @Length(max = 50, message = "{project.name.max-length}")
     private String name;
 
     @NotBlank(message = "{project.customer.required}")
-    @Length(max = 50, message = "{project.customer.length}")
+    @Length(max = 50, message = "{project.customer.max-length}")
     private String customer;
 
     @NotNull(message = "{project.startDate.required}")
