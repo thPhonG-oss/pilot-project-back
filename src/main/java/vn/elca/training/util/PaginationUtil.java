@@ -3,7 +3,8 @@ package vn.elca.training.util;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
-import vn.elca.training.model.exception.BadRequestException;
+import vn.elca.training.model.exception.BusinessException;
+import vn.elca.training.model.exception.ErrorCode;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -35,7 +36,7 @@ public class PaginationUtil {
 
     public static Pageable buildPaginationWithCustomSorting(String sortBy, String sortDir){
         if (!ALLOWED_SORT_FIELDS.contains(sortBy)) {
-            throw new BadRequestException("Invalid sort field: " + sortBy);
+            throw new BusinessException(ErrorCode.INVALID_SORT_FIELD);
         }
         Sort sort = "asc".equalsIgnoreCase(sortDir) ? Sort.by(sortBy).ascending() : Sort.by(sortBy).descending();
 
@@ -55,7 +56,7 @@ public class PaginationUtil {
         int validSize = size < DEFAULT_SIZE ? DEFAULT_SIZE : Math.min(size, MAX_SIZE);
 
         if (!ALLOWED_SORT_FIELDS.contains(sortBy)) {
-            throw new BadRequestException("Invalid sort field: " + sortBy);
+            throw new BusinessException(ErrorCode.INVALID_SORT_FIELD);
         }
 
         Sort sort = "asc".equalsIgnoreCase(sortDir) ? Sort.by(sortBy).ascending() : Sort.by(sortBy).descending();

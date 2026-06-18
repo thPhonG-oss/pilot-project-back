@@ -63,15 +63,9 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(status)
                 .body(new ErrorResponse<>(
                         errorCode.getCode(),
-                        getMessage(errorCode.getMessageCode(), ex.getArgs()),
+                        getMessage(errorCode.getMessageKey(), ex.getArgs()),
                         null
                 ));
-    }
-
-    @ExceptionHandler(BadRequestException.class)
-    public ResponseEntity<ErrorResponse<Object>> handleBadRequestException(BadRequestException ex) {
-        return ResponseEntity.badRequest()
-                .body(new ErrorResponse<>(null, ex.getMessage(), null));
     }
 
     @ExceptionHandler(Exception.class)
