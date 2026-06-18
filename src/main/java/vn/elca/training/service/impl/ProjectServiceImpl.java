@@ -7,8 +7,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import vn.elca.training.mapper.ProjectMapper;
-import vn.elca.training.model.dto.response.ProjectDto;
 import vn.elca.training.model.dto.request.ProjectCreationRequest;
 import vn.elca.training.model.dto.request.ProjectUpdateRequest;
 import vn.elca.training.model.entity.Employee;
@@ -32,7 +30,6 @@ import java.util.stream.Collectors;
  *
  */
 @Service
-@Profile("!dummy | dev")
 public class ProjectServiceImpl implements ProjectService {
 
     private static final String PROJECT_DEFAULT_SORT_BY = "projectNumber";
@@ -58,11 +55,6 @@ public class ProjectServiceImpl implements ProjectService {
     public Page<Project> findAll() {
         Pageable pageable = PaginationUtil.buildPaginationWithCustomSorting(PROJECT_DEFAULT_SORT_BY, PROJECT_DEFAULT_SORT_DIR);
         return projectRepository.findAll(pageable);
-    }
-
-    @Override
-    public long count() {
-        return projectRepository.count();
     }
 
     @Override
@@ -103,7 +95,7 @@ public class ProjectServiceImpl implements ProjectService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public ProjectDto createProject(final ProjectCreationRequest request){
+    public Project createProject(final ProjectCreationRequest request){
         // 1. validate project
         projectValidator.validateCreateProject(request);
 
@@ -121,9 +113,7 @@ public class ProjectServiceImpl implements ProjectService {
         project.setGroup(group);
         project.setEmployees(employees);
 
-        Project savedProject = projectRepository.save(project);
-
-        return ProjectMapper.INSTANCE.toProjectDto(savedProject);
+        return projectRepository.save(project);
     }
 
     @Override

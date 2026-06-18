@@ -30,7 +30,7 @@ import java.util.stream.Collectors;
 @RestController
 @RequestMapping("api/v1/projects")
 @Validated
-public class ProjectController extends AbstractApplicationController {
+public class ProjectController {
 
     private static final Logger log = LoggerFactory.getLogger(ProjectController.class);
 
@@ -42,7 +42,7 @@ public class ProjectController extends AbstractApplicationController {
 
     @PostMapping
     public ProjectDto createProject(@Valid @RequestBody ProjectCreationRequest request){
-        return projectService.createProject(request);
+        return ProjectMapper.INSTANCE.toProjectDto(projectService.createProject(request));
     }
 
     @GetMapping
@@ -50,7 +50,7 @@ public class ProjectController extends AbstractApplicationController {
         Page<Project> projectPage = projectService.findAll();
         List<ProjectDto> content = projectPage.getContent()
                 .stream()
-                .map(ProjectMapper.INSTANCE::toProjectDto)
+                .map(ProjectMapper.INSTANCE::toProjectSummary)
                 .collect(Collectors.toList());
 
         return new PageResponse<>(
@@ -75,7 +75,7 @@ public class ProjectController extends AbstractApplicationController {
         Page<Project> projectPage = projectService.findProjectsByCriteria(keyword, status, pageable);
         List<ProjectDto> content = projectPage.getContent()
                 .stream()
-                .map(ProjectMapper.INSTANCE::toProjectDto)
+                .map(ProjectMapper.INSTANCE::toProjectSummary)
                 .collect(Collectors.toList());
 
         return new PageResponse<>(
@@ -89,7 +89,7 @@ public class ProjectController extends AbstractApplicationController {
 
     @GetMapping("/{id}")
     public ProjectDto findProjectById(@Min(value = 1L, message = "Project ID must be a positive integer") @PathVariable final Long id) {
-        return mapper.toProjectDto(projectService.findProjectById(id));
+        return ProjectMapper.INSTANCE.toProjectDto(projectService.findProjectById(id));
     }
 
     @PutMapping("/{id}")

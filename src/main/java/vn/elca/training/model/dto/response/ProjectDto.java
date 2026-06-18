@@ -33,5 +33,6 @@ public class ProjectDto {
     private LocalDate endDate;
 
     private List<EmployeeDto> employeeDtos;
+
     private GroupDto groupDto;
 }

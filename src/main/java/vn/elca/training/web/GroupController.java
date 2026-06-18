@@ -3,6 +3,7 @@ package vn.elca.training.web;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import vn.elca.training.mapper.GroupMapper;
 import vn.elca.training.model.dto.response.GroupDto;
 import vn.elca.training.service.GroupService;
 
@@ -11,7 +12,7 @@ import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/v1/groups")
-public class GroupController extends AbstractApplicationController{
+public class GroupController {
     private final GroupService groupService;
 
     public GroupController(GroupService groupService) {
@@ -21,7 +22,7 @@ public class GroupController extends AbstractApplicationController{
     @GetMapping
     public List<GroupDto> getGroups() {
         return groupService.findAll().stream()
-                .map(mapper::toDto)
+                .map(GroupMapper.INSTANCE::toDto)
                 .collect(Collectors.toList());
     }
 }

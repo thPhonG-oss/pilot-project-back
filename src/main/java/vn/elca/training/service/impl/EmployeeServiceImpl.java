@@ -24,21 +24,14 @@ public class EmployeeServiceImpl implements EmployeeService {
 
     @Override
     public List<Employee> findEmployeesByVisas(List<String> visas){
-        if (visas == null || visas.isEmpty()) {
-            return Collections.emptyList();
-        }
+        List<String> normalizedVisas = normalizedVisas(visas);
 
-        List<String> normalizedVisas = visas.stream()
-                .filter(visa -> visa != null && !visa.trim().isEmpty())
-                .map(visa -> visa.trim().toUpperCase())
-                .distinct()
-                .collect(Collectors.toList());
-
-        if (normalizedVisas.isEmpty()) {
+        if(normalizedVisas.isEmpty()) {
             return Collections.emptyList();
         }
 
         List<Employee> employees = employeeRepository.findByVisaIn(normalizedVisas);
+
         Set<String> existingVisas = employees.stream()
                 .map(employee -> employee.getVisa().toUpperCase())
                 .collect(Collectors.toSet());
@@ -64,5 +57,21 @@ public class EmployeeServiceImpl implements EmployeeService {
         List<Employee> employees = new ArrayList<>();
         if(keyword == null || keyword.trim().isEmpty()) return employees;
         return employeeRepository.suggest(keyword.trim(), PaginationUtil.buildDefaultPageSizePagination());
+    }
+
+    private List<String> normalizedVisas(List<String> visas){
+        if(visas == null || visas.isEmpty()) return Collections.emptyList();
+
+        List<String> normalizedVisas = visas.stream()
+                .filter(visa -> visa != null && !visa.trim().isEmpty())
+                .map(visa -> visa.trim().toUpperCase())
+                .distinct()
+                .collect(Collectors.toList());
+
+        if (normalizedVisas.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        return  normalizedVisas;
     }
 }
