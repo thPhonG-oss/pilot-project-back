@@ -7,9 +7,12 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import vn.elca.training.service.MessageService;
 
+import javax.persistence.OptimisticLockException;
 import javax.validation.ConstraintViolationException;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -56,15 +59,45 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(BusinessException.class)
     public ResponseEntity<ErrorResponse<Object>> handleBusinessException(BusinessException ex) {
         ErrorCode errorCode = ex.getErrorCode();
-        HttpStatus status = ErrorCode.PROJECT_NOT_FOUND.equals(errorCode)
-                ? HttpStatus.NOT_FOUND
-                : HttpStatus.BAD_REQUEST;
 
-        return ResponseEntity.status(status)
+        return ResponseEntity.status(errorCode.getHttpStatus())
                 .body(new ErrorResponse<>(
                         errorCode.getCode(),
                         getMessage(errorCode.getMessageKey(), ex.getArgs()),
                         null
+                ));
+    }
+
+    @ExceptionHandler(OptimisticLockException.class)
+    public ResponseEntity<ErrorResponse<Object>> handleOptimisticLockException(OptimisticLockException ex) {
+        log.warn("Optimistic lock conflict", ex);
+        ErrorCode errorCode = ErrorCode.CONCURRENT_UPDATE;
+
+        return ResponseEntity.status(errorCode.getHttpStatus())
+                .body(new ErrorResponse<>(
+                        errorCode.getCode(),
+                        getMessage(errorCode.getMessageKey()),
+                        null
+                ));
+    }
+
+    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
+    public ResponseEntity<ErrorResponse<FieldErrorResponse>> handleMethodArgumentTypeMismatchException(
+            MethodArgumentTypeMismatchException ex
+    ) {
+        String parameterName = ex.getName();
+        String requiredType = ex.getRequiredType() != null ? ex.getRequiredType().getSimpleName() : "unknown";
+        String detailMessage = getMessage("validation.typeMismatch", parameterName, requiredType);
+        List<FieldErrorResponse> details = Collections.singletonList(
+                new FieldErrorResponse(parameterName, detailMessage)
+        );
+        ErrorCode errorCode = ErrorCode.INVALID_ARGUMENT_TYPE;
+
+        return ResponseEntity.status(errorCode.getHttpStatus())
+                .body(new ErrorResponse<>(
+                        errorCode.getCode(),
+                        getMessage("validation.failed"),
+                        details
                 ));
     }
 
@@ -73,7 +106,7 @@ public class GlobalExceptionHandler {
         log.error("Unexpected error occurred", ex);
 
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(new ErrorResponse<>(null, getMessage("error.unexpected"), null));
+                .body(new ErrorResponse<>(ErrorCode.UNCATEGORIZED_EXCEPTION.getCode(), getMessage("error.unexpected"), null));
     }
 
     private String getMessage(String messageCode, Object... args) {

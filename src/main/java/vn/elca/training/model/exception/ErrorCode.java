@@ -16,6 +16,8 @@ public enum ErrorCode {
     PROJECT_DELETE_NOT_ALLOWED(HttpStatus.BAD_REQUEST, "1007", "project.delete.notAllowed"),
     INVALID_SORT_FIELD(HttpStatus.BAD_REQUEST, "1008", "project.sort.invalid"),
     BAD_REQUEST(HttpStatus.BAD_REQUEST, "1009", "badRequest"),
+    CONCURRENT_UPDATE(HttpStatus.CONFLICT, "1010", "project.concurrentUpdate"),
+    INVALID_ARGUMENT_TYPE(HttpStatus.BAD_REQUEST, "1011", "validation.typeMismatch"),
     UNCATEGORIZED_EXCEPTION(HttpStatus.INTERNAL_SERVER_ERROR, "9999", "error.unexpected"),
     ;
 

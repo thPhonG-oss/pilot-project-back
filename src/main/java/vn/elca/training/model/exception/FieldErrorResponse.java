@@ -2,9 +2,8 @@ package vn.elca.training.model.exception;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
-import lombok.Setter;
 
-@Getter @Setter
+@Getter
 @AllArgsConstructor
 public class FieldErrorResponse {
     private String field;
