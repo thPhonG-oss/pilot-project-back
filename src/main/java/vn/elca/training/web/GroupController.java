@@ -14,15 +14,17 @@ import java.util.stream.Collectors;
 @RequestMapping("/api/v1/groups")
 public class GroupController {
     private final GroupService groupService;
+    private final GroupMapper groupMapper;
 
-    public GroupController(GroupService groupService) {
+    public GroupController(GroupService groupService, GroupMapper groupMapper) {
         this.groupService = groupService;
+        this.groupMapper = groupMapper;
     }
 
     @GetMapping
     public List<GroupDto> getGroups() {
         return groupService.findAll().stream()
-                .map(GroupMapper.INSTANCE::toDto)
+                .map(groupMapper::toDto)
                 .collect(Collectors.toList());
     }
 }

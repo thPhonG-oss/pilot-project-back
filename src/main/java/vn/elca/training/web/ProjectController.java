@@ -35,14 +35,16 @@ public class ProjectController {
     private static final Logger log = LoggerFactory.getLogger(ProjectController.class);
 
     private final ProjectService projectService;
+    private final ProjectMapper projectMapper;
 
-    public ProjectController(ProjectService projectService) {
+    public ProjectController(ProjectService projectService, ProjectMapper projectMapper) {
         this.projectService = projectService;
+        this.projectMapper = projectMapper;
     }
 
     @PostMapping
     public ProjectDto createProject(@Valid @RequestBody ProjectCreationRequest request){
-        return ProjectMapper.INSTANCE.toProjectDto(projectService.createProject(request));
+        return projectMapper.toProjectDto(projectService.createProject(request));
     }
 
     @GetMapping
@@ -50,7 +52,7 @@ public class ProjectController {
         Page<Project> projectPage = projectService.findAll();
         List<ProjectDto> content = projectPage.getContent()
                 .stream()
-                .map(ProjectMapper.INSTANCE::toProjectSummary)
+                .map(projectMapper::toProjectSummary)
                 .collect(Collectors.toList());
 
         return new PageResponse<>(
@@ -75,7 +77,7 @@ public class ProjectController {
         Page<Project> projectPage = projectService.findProjectsByCriteria(keyword, status, pageable);
         List<ProjectDto> content = projectPage.getContent()
                 .stream()
-                .map(ProjectMapper.INSTANCE::toProjectSummary)
+                .map(projectMapper::toProjectSummary)
                 .collect(Collectors.toList());
 
         return new PageResponse<>(
@@ -89,7 +91,7 @@ public class ProjectController {
 
     @GetMapping("/{id}")
     public ProjectDto findProjectById(@Min(value = 1L, message = "Project ID must be a positive integer") @PathVariable final Long id) {
-        return ProjectMapper.INSTANCE.toProjectDto(projectService.findProjectById(id));
+        return projectMapper.toProjectDto(projectService.findProjectById(id));
     }
 
     @PutMapping("/{id}")
@@ -98,7 +100,7 @@ public class ProjectController {
             @RequestBody @Valid final ProjectUpdateRequest updateRequest
     ){
         log.info("Project name: {}", updateRequest.getName());
-        return ProjectMapper.INSTANCE.toProjectDto(projectService.updateProject(id, updateRequest));
+        return projectMapper.toProjectDto(projectService.updateProject(id, updateRequest));
     }
 
     @DeleteMapping("/{id}")

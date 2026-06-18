@@ -16,9 +16,11 @@ import java.util.stream.Collectors;
 @RequestMapping("api/v1/employees")
 public class EmployeeController {
     private final EmployeeService employeeService;
+    private final EmployeeMapper employeeMapper;
 
-    public EmployeeController(EmployeeService employeeService) {
+    public EmployeeController(EmployeeService employeeService, EmployeeMapper employeeMapper) {
         this.employeeService = employeeService;
+        this.employeeMapper = employeeMapper;
     }
 
     @GetMapping("/suggestions")
@@ -28,7 +30,7 @@ public class EmployeeController {
         List<Employee> employees = employeeService.suggestEmployees(keyword);
 
         List<EmployeeDto> employeeDtos  = employees.stream()
-                .map(EmployeeMapper.INSTANCE::toDto)
+                .map(employeeMapper::toDto)
                 .collect(Collectors.toList());
 
         return employeeDtos;
