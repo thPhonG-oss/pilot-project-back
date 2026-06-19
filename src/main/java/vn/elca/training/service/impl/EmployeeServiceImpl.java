@@ -23,7 +23,7 @@ public class EmployeeServiceImpl implements EmployeeService {
     }
 
     @Override
-    public List<Employee> findEmployeesByVisas(List<String> visas){
+    public List<Employee> findEmployeesByVisas(final List<String> visas){
         List<String> normalizedVisas = normalizedVisas(visas);
 
         if(normalizedVisas.isEmpty()) {
@@ -48,18 +48,18 @@ public class EmployeeServiceImpl implements EmployeeService {
     }
 
     @Override
-    public Employee findByVisa(String visa){
+    public Employee findByVisa(final String visa){
         return employeeRepository.findByVisa(visa).orElseThrow(() -> new BusinessException(ErrorCode.EMPLOYEE_NOT_FOUND));
     }
 
     @Override
-    public List<Employee> suggestEmployees(String keyword){
+    public List<Employee> suggestEmployees(final String keyword){
         List<Employee> employees = new ArrayList<>();
         if(keyword == null || keyword.trim().isEmpty()) return employees;
         return employeeRepository.suggest(keyword.trim(), PaginationUtil.buildDefaultPageSizePagination());
     }
 
-    private List<String> normalizedVisas(List<String> visas){
+    private List<String> normalizedVisas(final List<String> visas){
         if(visas == null || visas.isEmpty()) return Collections.emptyList();
 
         List<String> normalizedVisas = visas.stream()

@@ -19,7 +19,7 @@ public class GroupServiceImpl implements GroupService {
     }
 
     @Override
-    public Group findById(Long id){
+    public Group findById(final Long id){
         return groupRepository.findById(id).orElseThrow(() -> new BusinessException(ErrorCode.GROUP_NOT_FOUND));
     }
 

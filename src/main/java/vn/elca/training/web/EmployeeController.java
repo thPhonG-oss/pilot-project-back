@@ -25,7 +25,7 @@ public class EmployeeController {
 
     @GetMapping("/suggestions")
     public List<EmployeeDto> suggestEmployees(
-            @RequestParam(required = false) String keyword
+            @RequestParam(required = false) final String keyword
     ){
         List<Employee> employees = employeeService.suggestEmployees(keyword);
 
