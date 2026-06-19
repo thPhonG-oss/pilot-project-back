@@ -2,7 +2,6 @@ package vn.elca.training.service.impl;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.context.annotation.Profile;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -22,7 +21,10 @@ import vn.elca.training.service.ProjectService;
 import vn.elca.training.util.PaginationUtil;
 import vn.elca.training.validator.ProjectValidator;
 
+import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -72,20 +74,21 @@ public class ProjectServiceImpl implements ProjectService {
         // 1. validate and return a target updated project
         Project targetProject = projectValidator.validateUpdateProject(id, updateRequest);
 
-        // 2. find target group and target employees
+        // 2. find target group
         Group group = groupService.findById(updateRequest.getGroupId());
-        List<Employee> employees = employeeService.findEmployeesByVisas(updateRequest.getVisas());
 
-        // 3. update project info
+        // 3. clear employees and update new employees
+        syncProjectEmployees(targetProject, updateRequest.getVisas());
+
+        // 4. update project info
         targetProject.setName(updateRequest.getName());
         targetProject.setCustomer(updateRequest.getCustomer());
         targetProject.setStatus(updateRequest.getStatus());
         targetProject.setStartDate(updateRequest.getStartDate());
         targetProject.setEndDate(updateRequest.getEndDate());
-        targetProject.setEmployees(employees);
         targetProject.setGroup(group);
 
-        return projectRepository.save(targetProject);
+        return targetProject;
     }
 
     @Override
@@ -101,7 +104,7 @@ public class ProjectServiceImpl implements ProjectService {
 
         // 2. find the target group and target employees
         Group group = groupService.findById(request.getGroupId());
-        List<Employee> employees = employeeService.findEmployeesByVisas(request.getVisas());
+        List<Employee> employees = request.getVisas().isEmpty() ? Collections.emptyList() :  employeeService.findEmployeesByVisas(request.getVisas());
 
         // 3. create new project
         Project project = new Project();
@@ -136,5 +139,47 @@ public class ProjectServiceImpl implements ProjectService {
         List<Project> projects = projectRepository.findAllById(distinctIds);
         projectValidator.validateDeleteProjects(projects, distinctIds);
         projectRepository.deleteAll(projects);
+    }
+
+    private void syncProjectEmployees(Project targetProject, List<String> requestedVisas){
+        // 1. early return if requestVisas null or empty
+        if(requestedVisas == null || requestedVisas.isEmpty())  {
+            targetProject.getEmployees().clear();
+            return;
+        }
+
+        Set<String> requested = toVisaSet(requestedVisas);
+
+        Set<String> current = targetProject.getEmployees().stream()
+                .map(e -> e.getVisa().toUpperCase())// database is source of truth
+                .collect(Collectors.toSet());
+
+        if (current.equals(requested)) {
+            return;
+        }
+
+        // 2. remove current visas but not exists in request
+        targetProject.getEmployees().removeIf(
+                employee ->  !requested.contains(employee.getVisa().toUpperCase()));
+
+        // 3. remaining visas after remove
+        List<String> visasToAdd = requestedVisas.stream()
+                .filter(visa -> !current.contains(visa))
+                .collect(Collectors.toList());
+
+        // 4. add new visas
+        if (!visasToAdd.isEmpty()) {
+            targetProject.getEmployees().addAll(employeeService.findEmployeesByVisas(visasToAdd));
+        }
+    }
+
+    private Set<String> toVisaSet(List<String> visas) {
+        if (visas == null || visas.isEmpty()) {
+            return Collections.emptySet();
+        }
+        return visas.stream()
+                .filter(v -> v != null && !v.trim().isEmpty())
+                .map(v -> v.trim().toUpperCase())
+                .collect(Collectors.toSet());
     }
 }

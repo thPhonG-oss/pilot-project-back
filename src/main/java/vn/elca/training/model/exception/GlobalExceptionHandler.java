@@ -60,6 +60,9 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorResponse<Object>> handleBusinessException(BusinessException ex) {
         ErrorCode errorCode = ex.getErrorCode();
 
+        log.error(errorCode.toString());
+        log.error(ex.getMessage());
+
         return ResponseEntity.status(errorCode.getHttpStatus())
                 .body(new ErrorResponse<>(
                         errorCode.getCode(),

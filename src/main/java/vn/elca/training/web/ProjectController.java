@@ -44,7 +44,7 @@ public class ProjectController {
 
     @PostMapping
     public ProjectDto createProject(@Valid @RequestBody ProjectCreationRequest request){
-        return projectMapper.toProjectDto(projectService.createProject(request));
+        return projectMapper.toProjectSummary(projectService.createProject(request));
     }
 
     @GetMapping

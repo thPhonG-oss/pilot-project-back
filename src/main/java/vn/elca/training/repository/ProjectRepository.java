@@ -23,6 +23,6 @@ public interface ProjectRepository extends JpaRepository<Project, Long>, Queryds
 
     boolean existsByProjectNumber(Long projectNumber);
 
-    @EntityGraph(attributePaths = {"employees", "group"})
+    @EntityGraph(attributePaths = {"employees", "group", "group.leader"})
     Optional<Project> findProjectById(Long id);
 }
