@@ -6,6 +6,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.hibernate.validator.constraints.Length;
 
+import javax.validation.constraints.Max;
 import javax.validation.constraints.Min;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
@@ -18,6 +19,7 @@ public class ProjectCreationRequest {
 
     @NotNull(message = "{project.number.required}")
     @Min(value = 1L, message = "{project.number.positive}")
+    @Max(value = 9999L, message = "{project.number.max}")
     private Long projectNumber;
 
     @NotBlank(message = "{project.name.required}")

@@ -2,6 +2,7 @@ package vn.elca.training.model.exception;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.orm.ObjectOptimisticLockingFailureException;
@@ -91,6 +92,40 @@ public class GlobalExceptionHandler {
                         getMessage(errorCode.getMessageKey()),
                         null
                 ));
+    }
+
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    public ResponseEntity<ErrorResponse<Object>> handleDataIntegrityViolationException(DataIntegrityViolationException ex) {
+        String constraintName = resolveConstraintName(ex);
+        log.warn("Data integrity violation (constraint={}): {}", constraintName, ex.getMostSpecificCause().getMessage());
+
+        ErrorCode errorCode = mapConstraintToErrorCode(constraintName);
+
+        return ResponseEntity.status(errorCode.getHttpStatus())
+                .body(new ErrorResponse<>(
+                        errorCode.getCode(),
+                        getMessage(errorCode.getMessageKey()),
+                        null
+                ));
+    }
+
+    private String resolveConstraintName(DataIntegrityViolationException ex) {
+        Throwable cause = ex.getCause();
+        if (cause instanceof org.hibernate.exception.ConstraintViolationException) {
+            return ((org.hibernate.exception.ConstraintViolationException) cause).getConstraintName();
+        }
+        return null;
+    }
+
+    private ErrorCode mapConstraintToErrorCode(String constraintName) {
+        if (constraintName == null) {
+            return ErrorCode.DATA_INTEGRITY_VIOLATION;
+        }
+        String name = constraintName.toLowerCase();
+        if (name.contains("uk_project_number")) {
+            return ErrorCode.PROJECT_NUMBER_EXISTS;
+        }
+        return ErrorCode.DATA_INTEGRITY_VIOLATION;
     }
 
     @ExceptionHandler(MethodArgumentTypeMismatchException.class)

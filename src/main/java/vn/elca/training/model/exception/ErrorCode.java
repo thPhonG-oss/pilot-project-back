@@ -18,6 +18,7 @@ public enum ErrorCode {
     BAD_REQUEST(HttpStatus.BAD_REQUEST, "1009", "badRequest"),
     CONCURRENT_UPDATE(HttpStatus.CONFLICT, "1010", "project.concurrentUpdate"),
     INVALID_ARGUMENT_TYPE(HttpStatus.BAD_REQUEST, "1011", "validation.typeMismatch"),
+    DATA_INTEGRITY_VIOLATION(HttpStatus.CONFLICT, "1012", "data.integrity.violation"),
     UNCATEGORIZED_EXCEPTION(HttpStatus.INTERNAL_SERVER_ERROR, "9999", "error.unexpected"),
     ;
 

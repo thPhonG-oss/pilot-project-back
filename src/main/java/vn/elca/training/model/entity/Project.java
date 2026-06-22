@@ -15,10 +15,14 @@ import java.util.Objects;
  * @author vlp
  */
 @Entity
+@Table(
+        name = "project",
+        uniqueConstraints = @UniqueConstraint(name = "uk_project_number", columnNames = "project_number")
+)
 @Getter @Setter
 @NoArgsConstructor @AllArgsConstructor
 public class Project extends BaseEntity{
-    @Column(unique = true, nullable = false)
+    @Column(name = "project_number", nullable = false)
     private Long projectNumber;
 
     @Column(nullable = false, length = 50)

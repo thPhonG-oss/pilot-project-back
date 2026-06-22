@@ -56,13 +56,13 @@ public class ProjectController {
     }
 
     @GetMapping("/{id}")
-    public ProjectDto findProjectById(@Min(value = 1L, message = "Project ID must be a positive integer") @PathVariable final Long id) {
+    public ProjectDto findProjectById(@Min(value = 1L, message = "{project.number.positive}") @PathVariable final Long id) {
         return projectService.findProjectById(id);
     }
 
     @PutMapping("/{id}")
     public ProjectDto updateProject(
-            @Min(value = 1L, message = "Project ID must be a positive integer") @PathVariable final Long id,
+            @Min(value = 1L, message = "{project.number.positive}") @PathVariable final Long id,
             @RequestBody @Valid final ProjectUpdateRequest updateRequest
     ){
         return projectService.updateProject(id, updateRequest);
