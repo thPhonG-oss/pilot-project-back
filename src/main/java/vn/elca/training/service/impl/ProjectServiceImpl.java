@@ -108,6 +108,7 @@ public class ProjectServiceImpl implements ProjectService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public ProjectDto createProject(final ProjectCreationRequest request){
+        log.info("Create project with number: {}", request.getProjectNumber());
         // 1. validate project
         projectValidator.validateCreateProject(request);
 
@@ -125,7 +126,9 @@ public class ProjectServiceImpl implements ProjectService {
         project.assignGroup(group);
         employees.forEach(project::addEmployee);
 
-        return projectMapper.toProjectSummary(projectRepository.save(project));
+        Project saved = projectRepository.save(project);
+        log.info("Created project id={}, number={}", saved.getId(), saved.getProjectNumber());
+        return projectMapper.toProjectSummary(saved);
     }
 
     @Override
@@ -153,7 +156,7 @@ public class ProjectServiceImpl implements ProjectService {
     private void syncProjectEmployees(Project targetProject, List<String> requestedVisas){
         Set<String> requested = toVisaSet(requestedVisas);
 
-        // 1. empty/null request -> gỡ toàn bộ (đồng bộ cả hai chiều)
+        // 1. empty/null request -> sync bi-directional
         if (requested.isEmpty()) {
             new ArrayList<>(targetProject.getEmployees())
                     .forEach(targetProject::removeEmployee);
@@ -168,17 +171,17 @@ public class ProjectServiceImpl implements ProjectService {
             return;
         }
 
-        // 2. gỡ employee hiện có nhưng không còn trong request
+        // 2. visa to delete
         new ArrayList<>(targetProject.getEmployees()).stream()
                 .filter(employee -> !requested.contains(employee.getVisa().toUpperCase()))
                 .forEach(targetProject::removeEmployee);
 
-        // 3. visa cần thêm mới (đã chuẩn hoá, so với current đã chuẩn hoá)
+        // 3. visa to add
         List<String> visasToAdd = requested.stream()
                 .filter(visa -> !current.contains(visa))
                 .collect(Collectors.toList());
 
-        // 4. thêm employee mới
+        // 4. add new employee(s)
         if (!visasToAdd.isEmpty()) {
             employeeService.findEmployeesByVisas(visasToAdd)
                     .forEach(targetProject::addEmployee);

@@ -1,7 +1,5 @@
 package vn.elca.training.web;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
@@ -27,8 +25,6 @@ import javax.validation.constraints.Min;
 @RequestMapping("api/v1/projects")
 @Validated
 public class ProjectController {
-
-    private static final Logger log = LoggerFactory.getLogger(ProjectController.class);
 
     private final ProjectService projectService;
 
@@ -69,7 +65,6 @@ public class ProjectController {
             @Min(value = 1L, message = "Project ID must be a positive integer") @PathVariable final Long id,
             @RequestBody @Valid final ProjectUpdateRequest updateRequest
     ){
-        log.info("Project name: {}", updateRequest.getName());
         return projectService.updateProject(id, updateRequest);
     }
 

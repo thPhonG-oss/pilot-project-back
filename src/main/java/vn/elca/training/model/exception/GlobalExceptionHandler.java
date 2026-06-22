@@ -12,6 +12,7 @@ import org.springframework.web.method.annotation.MethodArgumentTypeMismatchExcep
 import vn.elca.training.service.MessageService;
 
 import javax.persistence.OptimisticLockException;
+import javax.servlet.http.HttpServletRequest;
 import javax.validation.ConstraintViolationException;
 import java.util.Collections;
 import java.util.List;
@@ -37,6 +38,8 @@ public class GlobalExceptionHandler {
                 .map(error -> new FieldErrorResponse(error.getField(), error.getDefaultMessage()))
                 .collect(Collectors.toList());
 
+        log.debug("Request body validation failed: {}", details);
+
         return ResponseEntity.badRequest()
                 .body(new ErrorResponse<>(null, getMessage("validation.failed"), details));
     }
@@ -52,6 +55,8 @@ public class GlobalExceptionHandler {
                         error.getMessage()
                 ))
                 .collect(Collectors.toList());
+
+        log.debug("Constraint violation: {}", details);
 
         return ResponseEntity.badRequest()
                 .body(new ErrorResponse<>(null, getMessage("validation.failed"), details));
@@ -98,6 +103,8 @@ public class GlobalExceptionHandler {
         List<FieldErrorResponse> details = Collections.singletonList(
                 new FieldErrorResponse(parameterName, detailMessage)
         );
+
+        log.debug("Argument type mismatch: {}", detailMessage);
         ErrorCode errorCode = ErrorCode.INVALID_ARGUMENT_TYPE;
 
         return ResponseEntity.status(errorCode.getHttpStatus())
@@ -109,8 +116,8 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(Exception.class)
-    public ResponseEntity<ErrorResponse<Object>> handleUnexpectedException(Exception ex) {
-        log.error("Unexpected error occurred", ex);
+    public ResponseEntity<ErrorResponse<Object>> handleUnexpectedException(Exception ex, HttpServletRequest request) {
+        log.error("Unexpected error on {} {}", request.getMethod(), request.getRequestURI(), ex);
 
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(new ErrorResponse<>(ErrorCode.UNCATEGORIZED_EXCEPTION.getCode(), getMessage("error.unexpected"), null));
