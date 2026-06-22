@@ -9,6 +9,7 @@ import javax.persistence.*;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * @author vlp
@@ -56,5 +57,34 @@ public class Project extends BaseEntity{
     public Project(String name, LocalDate startDate) {
         this.name = name;
         this.startDate = startDate;
+    }
+
+    public void assignGroup(Group newGroup) {
+        Long currentId = (this.group == null) ? null : this.group.getId();
+        Long newId = (newGroup == null) ? null : newGroup.getId();
+
+        if (Objects.equals(currentId, newId)) {
+            return;
+        }
+
+        if (this.group != null) {
+            this.group.getProjects().remove(this);
+        }
+
+        this.group = newGroup;
+
+        if (newGroup != null) {
+            newGroup.getProjects().add(this);
+        }
+    }
+
+    public void addEmployee(Employee employee) {
+        this.employees.add(employee);
+        employee.getProjects().add(this);
+    }
+
+    public void removeEmployee(Employee employee) {
+        this.employees.remove(employee);
+        employee.getProjects().remove(this);
     }
 }
