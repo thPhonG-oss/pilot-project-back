@@ -7,21 +7,17 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
-import vn.elca.training.mapper.ProjectMapper;
 import vn.elca.training.model.dto.request.ProjectDeleteRequest;
 import vn.elca.training.model.dto.response.PageResponse;
 import vn.elca.training.model.dto.response.ProjectDto;
 import vn.elca.training.model.dto.request.ProjectCreationRequest;
 import vn.elca.training.model.dto.request.ProjectUpdateRequest;
-import vn.elca.training.model.entity.Project;
 import vn.elca.training.model.entity.Status;
 import vn.elca.training.service.ProjectService;
 import vn.elca.training.util.PaginationUtil;
 
 import javax.validation.Valid;
 import javax.validation.constraints.Min;
-import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  * @author gtn
@@ -35,33 +31,20 @@ public class ProjectController {
     private static final Logger log = LoggerFactory.getLogger(ProjectController.class);
 
     private final ProjectService projectService;
-    private final ProjectMapper projectMapper;
 
-    public ProjectController(ProjectService projectService, ProjectMapper projectMapper) {
+    public ProjectController(ProjectService projectService) {
         this.projectService = projectService;
-        this.projectMapper = projectMapper;
     }
 
     @PostMapping
+    @ResponseStatus(HttpStatus.CREATED)
     public ProjectDto createProject(@Valid @RequestBody ProjectCreationRequest request){
-        return projectMapper.toProjectSummary(projectService.createProject(request));
+        return projectService.createProject(request);
     }
 
     @GetMapping
     public PageResponse<ProjectDto> findAllProjects(){
-        Page<Project> projectPage = projectService.findAll();
-        List<ProjectDto> content = projectPage.getContent()
-                .stream()
-                .map(projectMapper::toProjectSummary)
-                .collect(Collectors.toList());
-
-        return new PageResponse<>(
-                projectPage.getNumber() + 1,
-                projectPage.getNumberOfElements(),
-                content,
-                projectPage.getTotalPages(),
-                projectPage.getTotalElements(),
-                projectPage.isLast());
+        return toPageResponse(projectService.findAll());
     }
 
     @GetMapping("/search")
@@ -73,25 +56,12 @@ public class ProjectController {
             ) {
 
         Pageable pageable = PaginationUtil.buildCustomPaginationWithPageAndSize(page, size);
-
-        Page<Project> projectPage = projectService.findProjectsByCriteria(keyword, status, pageable);
-        List<ProjectDto> content = projectPage.getContent()
-                .stream()
-                .map(projectMapper::toProjectSummary)
-                .collect(Collectors.toList());
-
-        return new PageResponse<>(
-                projectPage.getNumber() + 1,
-                projectPage.getNumberOfElements(),
-                content,
-                projectPage.getTotalPages(),
-                projectPage.getTotalElements(),
-                projectPage.isLast());
+        return toPageResponse(projectService.findProjectsByCriteria(keyword, status, pageable));
     }
 
     @GetMapping("/{id}")
     public ProjectDto findProjectById(@Min(value = 1L, message = "Project ID must be a positive integer") @PathVariable final Long id) {
-        return projectMapper.toProjectDto(projectService.findProjectById(id));
+        return projectService.findProjectById(id);
     }
 
     @PutMapping("/{id}")
@@ -100,7 +70,17 @@ public class ProjectController {
             @RequestBody @Valid final ProjectUpdateRequest updateRequest
     ){
         log.info("Project name: {}", updateRequest.getName());
-        return projectMapper.toProjectDto(projectService.updateProject(id, updateRequest));
+        return projectService.updateProject(id, updateRequest);
+    }
+
+    private PageResponse<ProjectDto> toPageResponse(Page<ProjectDto> projectPage) {
+        return new PageResponse<>(
+                projectPage.getNumber() + 1,
+                projectPage.getNumberOfElements(),
+                projectPage.getContent(),
+                projectPage.getTotalPages(),
+                projectPage.getTotalElements(),
+                projectPage.isLast());
     }
 
     @DeleteMapping("/{id}")

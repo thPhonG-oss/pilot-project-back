@@ -1,5 +1,6 @@
 package vn.elca.training.service;
 
+import vn.elca.training.model.dto.response.EmployeeDto;
 import vn.elca.training.model.entity.Employee;
 
 import java.util.List;
@@ -9,5 +10,5 @@ public interface EmployeeService {
 
     Employee findByVisa(String visa);
 
-    List<Employee> suggestEmployees(String keyword);
+    List<EmployeeDto> suggestEmployees(String keyword);
 }

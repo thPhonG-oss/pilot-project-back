@@ -1,6 +1,8 @@
 package vn.elca.training.service.impl;
 
 import org.springframework.stereotype.Service;
+import vn.elca.training.mapper.EmployeeMapper;
+import vn.elca.training.model.dto.response.EmployeeDto;
 import vn.elca.training.model.entity.Employee;
 import vn.elca.training.model.exception.BusinessException;
 import vn.elca.training.model.exception.ErrorCode;
@@ -8,7 +10,6 @@ import vn.elca.training.repository.EmployeeRepository;
 import vn.elca.training.service.EmployeeService;
 import vn.elca.training.util.PaginationUtil;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
@@ -17,9 +18,11 @@ import java.util.stream.Collectors;
 @Service
 public class EmployeeServiceImpl implements EmployeeService {
     private final EmployeeRepository employeeRepository;
+    private final EmployeeMapper employeeMapper;
 
-    public EmployeeServiceImpl(EmployeeRepository employeeRepository) {
+    public EmployeeServiceImpl(EmployeeRepository employeeRepository, EmployeeMapper employeeMapper) {
         this.employeeRepository = employeeRepository;
+        this.employeeMapper = employeeMapper;
     }
 
     @Override
@@ -53,10 +56,11 @@ public class EmployeeServiceImpl implements EmployeeService {
     }
 
     @Override
-    public List<Employee> suggestEmployees(final String keyword){
-        List<Employee> employees = new ArrayList<>();
-        if(keyword == null || keyword.trim().isEmpty()) return employees;
-        return employeeRepository.suggest(keyword.trim(), PaginationUtil.buildDefaultPageSizePagination());
+    public List<EmployeeDto> suggestEmployees(final String keyword){
+        if(keyword == null || keyword.trim().isEmpty()) return Collections.emptyList();
+        return employeeRepository.suggest(keyword.trim(), PaginationUtil.buildDefaultPageSizePagination()).stream()
+                .map(employeeMapper::toDto)
+                .collect(Collectors.toList());
     }
 
     private List<String> normalizedVisas(final List<String> visas){

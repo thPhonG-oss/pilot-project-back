@@ -4,7 +4,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import vn.elca.training.model.dto.request.ProjectCreationRequest;
 import vn.elca.training.model.dto.request.ProjectUpdateRequest;
-import vn.elca.training.model.entity.Project;
+import vn.elca.training.model.dto.response.ProjectDto;
 import vn.elca.training.model.entity.Status;
 
 import javax.validation.Valid;
@@ -16,15 +16,15 @@ import java.util.List;
  */
 public interface ProjectService {
 
-    Page<Project> findAll();
+    Page<ProjectDto> findAll();
 
-    Project findProjectById(final Long id);
+    ProjectDto findProjectById(final Long id);
 
-    Project updateProject(final Long id, final @Valid ProjectUpdateRequest updateRequest);
+    ProjectDto updateProject(final Long id, final @Valid ProjectUpdateRequest updateRequest);
 
-    Page<Project> findProjectsByCriteria(final String keyword, final Status status, final Pageable pageable);
+    Page<ProjectDto> findProjectsByCriteria(final String keyword, final Status status, final Pageable pageable);
 
-    Project createProject(final ProjectCreationRequest request);
+    ProjectDto createProject(final ProjectCreationRequest request);
 
     void deleteProject(final Long id);
 
