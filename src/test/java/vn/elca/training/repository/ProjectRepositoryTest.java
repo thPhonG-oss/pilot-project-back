@@ -1,7 +1,6 @@
 package vn.elca.training.repository;
 
 import java.time.LocalDate;
-import java.util.Date;
 import java.util.List;
 
 import javax.persistence.EntityManager;
@@ -12,8 +11,6 @@ import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
 import org.springframework.test.annotation.Rollback;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringRunner;
@@ -21,6 +18,7 @@ import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.transaction.annotation.Transactional;
 import vn.elca.training.ApplicationWebConfig;
 import vn.elca.training.model.entity.*;
+import vn.elca.training.testutil.TestEntityFactory;
 
 @ContextConfiguration(classes = {ApplicationWebConfig.class})
 @RunWith(value=SpringRunner.class)
@@ -33,19 +31,25 @@ public class ProjectRepositoryTest {
     @Autowired
     private GroupRepository groupRepository;
 
+    @Autowired
+    private EmployeeRepository employeeRepository;
+
     @Test
     public void testCountAll() {
-        projectRepository.save(new Project("KSTA", LocalDate.now()));
-        projectRepository.save(new Project("LAGAPEO", LocalDate.now()));
-        projectRepository.save(new Project("ZHQUEST", LocalDate.now()));
-        projectRepository.save(new Project("SECUTIX", LocalDate.now()));
-        Assert.assertEquals(9, projectRepository.count());
+        long initialCount = projectRepository.count();
+
+        projectRepository.save(TestEntityFactory.project("COUNT_KSTA", LocalDate.now()));
+        projectRepository.save(TestEntityFactory.project("COUNT_LAGAPEO", LocalDate.now()));
+        projectRepository.save(TestEntityFactory.project("COUNT_ZHQUEST", LocalDate.now()));
+        projectRepository.save(TestEntityFactory.project("COUNT_SECUTIX", LocalDate.now()));
+
+        Assert.assertEquals(initialCount + 4, projectRepository.count());
     }
 
     @Test
     public void testFindOneWithQueryDSL() {
-        final String PROJECT_NAME = "KSTA";
-        projectRepository.save(new Project(PROJECT_NAME, LocalDate.now()));
+        final String PROJECT_NAME = "QUERYDSL_KSTA_TEST";
+        projectRepository.save(TestEntityFactory.project(PROJECT_NAME, LocalDate.now()));
         Project project = new JPAQuery<Project>(em)
                 .from(QProject.project)
                 .where(QProject.project.name.eq(PROJECT_NAME))
@@ -56,25 +60,27 @@ public class ProjectRepositoryTest {
     @Test
     public void testSaveOneProject(){
         String projectName = "TEST_PROJECT";
-        LocalDate finishDate = LocalDate.now();
+        LocalDate startDate = LocalDate.now();
 
-        Project project = new Project(projectName, finishDate);
-        project.setCustomer("TEST_CUSTOMER");
+        Project project = TestEntityFactory.project(projectName, startDate, "TEST_CUSTOMER");
 
         Project savedProject = projectRepository.save(project);
 
         Assert.assertNotNull(savedProject.getId());
         Assert.assertEquals(projectName, savedProject.getName());
-        Assert.assertEquals(finishDate, savedProject.getFinishingDate());
+        Assert.assertEquals(startDate, savedProject.getStartDate());
         Assert.assertEquals("TEST_CUSTOMER", savedProject.getCustomer());
+        Assert.assertNotNull(savedProject.getProjectNumber());
     }
 
     @Test
     @Transactional
     @Rollback(true)
     public void testSaveMultipleProjectsWithHierarchy() {
-        // Create employees for different positions
-        Employee qmvLeader = new Employee("QMV", "QMV", "Leader", LocalDate.now().minusYears(30));
+        // Reuse seeded leader to avoid unique visa violation (QMV exists in data.sql)
+        Employee qmvLeader = employeeRepository.findByVisa("QMV")
+                .orElseThrow(() -> new IllegalStateException("Seed employee QMV not found"));
+
         Employee hhh = new Employee("HHH", "HHH", "QualityAgent", LocalDate.now().minusYears(28));
         Employee hhn = new Employee("HHN", "HHN", "Developer", LocalDate.now().minusYears(25));
         Employee plh = new Employee("PLH", "PLH", "QualityAgent", LocalDate.now().minusYears(26));
@@ -83,19 +89,17 @@ public class ProjectRepositoryTest {
         Employee tdh = new Employee("TDH", "TDH", "Developer", LocalDate.now().minusYears(29));
 
         // Create the group with QMV as leader
-        Group qmvGroup = new Group(qmvLeader);
+        Group qmvGroup = new Group();
+        qmvGroup.setLeader(qmvLeader);
 
         // Create multiple projects and associate them with the group
-        Project kstaProject = new Project("KSTA", LocalDate.now());
-        kstaProject.setCustomer("KSTA_CUSTOMER");
+        Project kstaProject = TestEntityFactory.project("KSTA", LocalDate.now(), "KSTA_CUSTOMER");
         kstaProject.setGroup(qmvGroup);
 
-        Project lagapeoProject = new Project("LAGAPEO", LocalDate.now());
-        lagapeoProject.setCustomer("LAGAPEO_CUSTOMER");
+        Project lagapeoProject = TestEntityFactory.project("LAGAPEO", LocalDate.now(), "LAGAPEO_CUSTOMER");
         lagapeoProject.setGroup(qmvGroup);
 
-        Project zhquestProject = new Project("ZHQUEST", LocalDate.now());
-        zhquestProject.setCustomer("ZHQUEST_CUSTOMER");
+        Project zhquestProject = TestEntityFactory.project("ZHQUEST", LocalDate.now(), "ZHQUEST_CUSTOMER");
         zhquestProject.setGroup(qmvGroup);
 
         // Add projects to group (inverse side) so cascade from group to projects works
@@ -120,15 +124,8 @@ public class ProjectRepositoryTest {
         Assert.assertNotNull("Group leader should be persisted and have id",
                 savedGroup.getLeader().getId());
 
-        // Verify projects persisted
-        Pageable page = PageRequest.of(0, 10);
-        long totalMatching = projectRepository.findAllByNameContainingIgnoreCase("", page).getTotalElements();
-
-        // There are initial projects inserted via data.sql (5), plus 3 we added here;
-        // but because we added @Rollback(true), in this test context we only check local persistence:
-        // To be robust, verify that each project we inserted can be found by name.
-        Project fetchedKsta = projectRepository.findAllByNameContainingIgnoreCase("KSTA", page)
-                .getContent().stream().filter(p -> "KSTA_CUSTOMER".equals(p.getCustomer())).findFirst().orElse(null);
+        // Verify projects persisted using saved ids (avoid collisions with other tests/data.sql)
+        Project fetchedKsta = projectRepository.findById(kstaProject.getId()).orElse(null);
         Assert.assertNotNull("KSTA project should be persisted and queryable", fetchedKsta);
         Assert.assertEquals("KSTA", fetchedKsta.getName());
         Assert.assertEquals("KSTA_CUSTOMER", fetchedKsta.getCustomer());
@@ -145,9 +142,8 @@ public class ProjectRepositoryTest {
     public void testDeleteProject() {
         // Create and save a project
         String projectName = "DELETE_TEST_PROJECT";
-        Project project = new Project(projectName, LocalDate.now());
+        Project project = TestEntityFactory.project(projectName, LocalDate.now(), "DELETE_TEST_CUSTOMER");
         project.setStatus(Status.NEW);
-        project.setCustomer("DELETE_TEST_CUSTOMER");
 
         Project savedProject = projectRepository.save(project);
         Long projectId = savedProject.getId();
@@ -168,13 +164,11 @@ public class ProjectRepositoryTest {
     public void testQueryProjectsByNameUsingQueryDSL() {
         // Create and save test projects with different names
         String targetName = "QUERYDSL_TEST_PROJECT";
-        Project project1 = new Project(targetName, LocalDate.now());
+        Project project1 = TestEntityFactory.project(targetName, LocalDate.now(), "CUSTOMER_1");
         project1.setStatus(Status.INP);
-        project1.setCustomer("CUSTOMER_1");
 
-        Project project2 = new Project("OTHER_PROJECT", LocalDate.now());
+        Project project2 = TestEntityFactory.project("OTHER_PROJECT", LocalDate.now(), "CUSTOMER_2");
         project2.setStatus(Status.NEW);
-        project2.setCustomer("CUSTOMER_2");
 
         projectRepository.save(project1);
         projectRepository.save(project2);
@@ -196,17 +190,14 @@ public class ProjectRepositoryTest {
     @Rollback(true)
     public void testQueryProjectsByNameAndStatusUsingQueryDSL() {
         // Create and save projects with different combinations
-        Project project1 = new Project("COMBINED_TEST_1", LocalDate.now());
+        Project project1 = TestEntityFactory.project("COMBINED_TEST_1", LocalDate.now(), "CUST_1");
         project1.setStatus(Status.INP);
-        project1.setCustomer("CUST_1");
 
-        Project project2 = new Project("COMBINED_TEST_1", LocalDate.now().minusDays(1));
+        Project project2 = TestEntityFactory.project("COMBINED_TEST_1", LocalDate.now().minusDays(1), "CUST_2");
         project2.setStatus(Status.NEW);
-        project2.setCustomer("CUST_2");
 
-        Project project3 = new Project("COMBINED_TEST_2", LocalDate.now());
+        Project project3 = TestEntityFactory.project("COMBINED_TEST_2", LocalDate.now(), "CUST_3");
         project3.setStatus(Status.INP);
-        project3.setCustomer("CUST_3");
 
         projectRepository.save(project1);
         projectRepository.save(project2);

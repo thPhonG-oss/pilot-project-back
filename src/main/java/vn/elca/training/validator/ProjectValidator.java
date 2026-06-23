@@ -27,7 +27,7 @@ public class ProjectValidator {
     }
 
     public Project validateUpdateProject(Long id, ProjectUpdateRequest request){
-        Project targetProject = projectRepository.findById(id)
+        Project targetProject = projectRepository.findProjectById(id)
                 .orElseThrow(() -> new BusinessException(ErrorCode.PROJECT_NOT_FOUND));
         validateDateRange(request.getStartDate(), request.getEndDate());
 

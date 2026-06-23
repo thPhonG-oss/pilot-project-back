@@ -8,6 +8,7 @@ import vn.elca.training.model.exception.BusinessException;
 import vn.elca.training.model.exception.ErrorCode;
 import vn.elca.training.repository.EmployeeRepository;
 import vn.elca.training.service.EmployeeService;
+import vn.elca.training.util.LikeEscapeUtil;
 import vn.elca.training.util.PaginationUtil;
 
 import java.util.Collections;
@@ -58,7 +59,8 @@ public class EmployeeServiceImpl implements EmployeeService {
     @Override
     public List<EmployeeDto> suggestEmployees(final String keyword){
         if(keyword == null || keyword.trim().isEmpty()) return Collections.emptyList();
-        return employeeRepository.suggest(keyword.trim(), PaginationUtil.buildDefaultPageSizePagination()).stream()
+        String escapedKeyword = LikeEscapeUtil.escape(keyword.trim());
+        return employeeRepository.suggest(escapedKeyword, PaginationUtil.buildDefaultPageSizePagination()).stream()
                 .map(employeeMapper::toDto)
                 .collect(Collectors.toList());
     }

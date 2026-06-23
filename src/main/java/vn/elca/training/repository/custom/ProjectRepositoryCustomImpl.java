@@ -9,6 +9,7 @@ import org.springframework.data.domain.Pageable;
 import vn.elca.training.model.entity.Project;
 import vn.elca.training.model.entity.QProject;
 import vn.elca.training.model.entity.Status;
+import vn.elca.training.util.LikeEscapeUtil;
 
 import javax.persistence.EntityManager;
 import java.util.List;
@@ -50,15 +51,16 @@ public class ProjectRepositoryCustomImpl implements ProjectRepositoryCustom{
         BooleanBuilder builder = new BooleanBuilder();
 
         if (keyword != null && !keyword.trim().isEmpty()) {
-            String value = keyword.trim();
+            String value = LikeEscapeUtil.escape(keyword.trim());
+            char escape = LikeEscapeUtil.ESCAPE_CHAR;
 
-            BooleanExpression condition = project.name.containsIgnoreCase(value)
-                    .or(project.customer.containsIgnoreCase(value));
+            BooleanExpression condition = project.name.lower().like("%" + value.toLowerCase() + "%", escape)
+                    .or(project.customer.lower().like("%" + value.toLowerCase() + "%", escape));
             try {
-                Long.parseLong(value);
-                condition = condition.or(project.projectNumber.stringValue().contains(value));
+                Long.parseLong(keyword.trim());
+                condition = condition.or(project.projectNumber.stringValue().like("%" + value + "%", escape));
             }
-            catch (NumberFormatException ignored){
+            catch (NumberFormatException ignored) {
             }
 
             builder.and(condition);

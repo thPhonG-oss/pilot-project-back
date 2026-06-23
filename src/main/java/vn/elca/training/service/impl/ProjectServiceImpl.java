@@ -95,6 +95,7 @@ public class ProjectServiceImpl implements ProjectService {
         targetProject.setEndDate(updateRequest.getEndDate());
         targetProject.assignGroup(group);
 
+        log.info("Updated project id={}", id);
         return projectMapper.toProjectDto(targetProject);
     }
 

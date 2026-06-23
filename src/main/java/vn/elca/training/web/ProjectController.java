@@ -16,13 +16,14 @@ import vn.elca.training.util.PaginationUtil;
 
 import javax.validation.Valid;
 import javax.validation.constraints.Min;
+import javax.validation.constraints.Size;
 
 /**
  * @author gtn
  *
  */
 @RestController
-@RequestMapping("api/v1/projects")
+@RequestMapping("/api/v1/projects")
 @Validated
 public class ProjectController {
 
@@ -45,7 +46,9 @@ public class ProjectController {
 
     @GetMapping("/search")
     public PageResponse<ProjectDto> search(
-            @RequestParam(required = false) final String keyword,
+            @RequestParam(required = false)
+            @Size(max = 50, message = "{search.keyword.max-length}")
+            final String keyword,
             @RequestParam(required = false) final Status status,
             @RequestParam(required = false, defaultValue = "1") final int page,
             @RequestParam(required = false, defaultValue = "10") final int size
@@ -56,7 +59,7 @@ public class ProjectController {
     }
 
     @GetMapping("/{id}")
-    public ProjectDto findProjectById(@Min(value = 1L, message = "{project.number.positive}") @PathVariable final Long id) {
+    public ProjectDto findProjectById(@Min(value = 1L, message = "{project.id.positive}") @PathVariable final Long id) {
         return projectService.findProjectById(id);
     }
 
@@ -66,16 +69,6 @@ public class ProjectController {
             @RequestBody @Valid final ProjectUpdateRequest updateRequest
     ){
         return projectService.updateProject(id, updateRequest);
-    }
-
-    private PageResponse<ProjectDto> toPageResponse(Page<ProjectDto> projectPage) {
-        return new PageResponse<>(
-                projectPage.getNumber() + 1,
-                projectPage.getNumberOfElements(),
-                projectPage.getContent(),
-                projectPage.getTotalPages(),
-                projectPage.getTotalElements(),
-                projectPage.isLast());
     }
 
     @DeleteMapping("/{id}")
@@ -90,5 +83,15 @@ public class ProjectController {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deleteProjects(@Valid @RequestBody final ProjectDeleteRequest request) {
         projectService.deleteProjects(request.getIds());
+    }
+
+    private PageResponse<ProjectDto> toPageResponse(Page<ProjectDto> projectPage) {
+        return new PageResponse<>(
+                projectPage.getNumber() + 1,
+                projectPage.getNumberOfElements(),
+                projectPage.getContent(),
+                projectPage.getTotalPages(),
+                projectPage.getTotalElements(),
+                projectPage.isLast());
     }
 }
