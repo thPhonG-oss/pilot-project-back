@@ -102,6 +102,10 @@ public class ProjectServiceImpl implements ProjectService {
     @Override
     @Transactional(readOnly = true)
     public Page<ProjectDto> findProjectsByCriteria(final String keyword, final Status status, final Pageable pageable) {
+        if(keyword == null || keyword.trim().isEmpty() && status == null) {
+            return projectRepository.findAll(pageable).map(projectMapper::toProjectSummary);
+        }
+
         return projectRepository.findProjectsByCriteria(keyword, status, pageable)
                 .map(projectMapper::toProjectSummary);
     }
@@ -151,7 +155,8 @@ public class ProjectServiceImpl implements ProjectService {
 
         List<Project> projects = projectRepository.findAllById(distinctIds);
         projectValidator.validateDeleteProjects(projects, distinctIds);
-        projectRepository.deleteAll(projects);
+        projectRepository.deleteEmployeeLinksByProjectIds(distinctIds);
+        projectRepository.deleteProjectsByIds(distinctIds);
     }
 
     private void syncProjectEmployees(Project targetProject, List<String> requestedVisas){
