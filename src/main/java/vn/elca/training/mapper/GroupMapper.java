@@ -14,8 +14,30 @@ public interface GroupMapper {
     GroupDto toDto(Group entity);
 
     @AfterMapping
-    default void afterMapping(Group entity,@MappingTarget GroupDto dto) {
-        String leaderName = entity.getLeader() == null ? null : entity.getLeader().getFirstName() +  " " + entity.getLeader().getLastName();
-        dto.setLeaderName(leaderName);
+    default void afterMapping(Group entity, @MappingTarget GroupDto dto) {
+        if (entity.getLeader() == null) {
+            dto.setLeaderName(null);
+            return;
+        }
+        dto.setLeaderName(formatLeaderName(
+                entity.getLeader().getFirstName(),
+                entity.getLeader().getLastName()
+        ));
+    }
+
+    default String formatLeaderName(String firstName, String lastName) {
+        boolean hasFirst = firstName != null && !firstName.trim().isEmpty();
+        boolean hasLast = lastName != null && !lastName.trim().isEmpty();
+
+        if (hasFirst && hasLast) {
+            return firstName.trim() + " " + lastName.trim();
+        }
+        if (hasFirst) {
+            return firstName.trim();
+        }
+        if (hasLast) {
+            return lastName.trim();
+        }
+        return null;
     }
 }
