@@ -19,6 +19,7 @@
         <org.mapstruct.version>1.4.2.Final</org.mapstruct.version>
         <org.projectlombok.version>1.18.42</org.projectlombok.version>
         <lombok-mapstruct-binding.version>0.2.0</lombok-mapstruct-binding.version>
+        <jacoco.version>0.8.11</jacoco.version>
     </properties>
 
     <!-- Inherit defaults from Spring Boot -->
@@ -179,6 +180,64 @@
                         </configuration>
                     </execution>
                 </executions>
+            </plugin>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <configuration>
+                    <argLine>@{argLine}</argLine>
+                </configuration>
+            </plugin>
+
+            <plugin>
+                <groupId>org.jacoco</groupId>
+                <artifactId>jacoco-maven-plugin</artifactId>
+                <version>${jacoco.version}</version>
+                <executions>
+                    <execution>
+                        <id>prepare-agent</id>
+                        <goals>
+                            <goal>prepare-agent</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>report</id>
+                        <phase>test</phase>
+                        <goals>
+                            <goal>report</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <excludes>
+                        <!-- Application bootstrap & Spring wiring -->
+                        <exclude>vn/elca/training/ApplicationLauncher*</exclude>
+                        <exclude>vn/elca/training/ApplicationWebConfig*</exclude>
+                        <exclude>vn/elca/training/configuration/**</exclude>
+
+                        <!-- Data models without business logic -->
+                        <exclude>vn/elca/training/model/dto/**</exclude>
+                        <exclude>vn/elca/training/model/entity/**</exclude>
+                        <exclude>vn/elca/training/model/exception/**</exclude>
+
+                        <!-- MapStruct interfaces & generated implementations -->
+                        <exclude>vn/elca/training/mapper/**</exclude>
+                        <exclude>**/*MapperImpl*</exclude>
+
+                        <!-- JPA repository interfaces -->
+                        <exclude>vn/elca/training/repository/*Repository*</exclude>
+                        <exclude>vn/elca/training/repository/custom/*RepositoryCustom*</exclude>
+
+                        <!-- Service interfaces (impl package remains measured) -->
+                        <exclude>vn/elca/training/service/ProjectService.class</exclude>
+                        <exclude>vn/elca/training/service/GroupService.class</exclude>
+                        <exclude>vn/elca/training/service/EmployeeService.class</exclude>
+
+                        <!-- QueryDSL generated Q-types -->
+                        <exclude>**/Q*</exclude>
+                    </excludes>
+                </configuration>
             </plugin>
         </plugins>
     </build>
