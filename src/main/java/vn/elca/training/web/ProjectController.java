@@ -40,8 +40,17 @@ public class ProjectController {
     }
 
     @GetMapping
-    public PageResponse<ProjectDto> findAllProjects(){
-        return toPageResponse(projectService.findAll());
+    public PageResponse<ProjectDto> findAllProjects(
+            @RequestParam(required = false, defaultValue = "1") final int page,
+            @RequestParam(required = false, defaultValue = "10") final int size
+    ) {
+        Pageable pageable = PaginationUtil.buildFullCustomPagination(
+                page,
+                size,
+                PaginationUtil.PROJECT_LIST_SORT_FIELD,
+                "ASC"
+        );
+        return toPageResponse(projectService.findAll(pageable));
     }
 
     @GetMapping("/search")

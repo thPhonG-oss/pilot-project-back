@@ -43,11 +43,10 @@ public class PaginationUtil {
         return PageRequest.of(DEFAULT_PAGE - 1, DEFAULT_SIZE, sort);
     }
 
-    public static  Pageable buildCustomPaginationWithPageAndSize(int page, int size){
-        int validPage = page < DEFAULT_PAGE ? DEFAULT_PAGE : Math.min(page - 1, MAX_PAGE);
-        int validSize = size < DEFAULT_SIZE ? DEFAULT_SIZE : Math.min(size, MAX_SIZE);
+    public static final String PROJECT_LIST_SORT_FIELD = "projectNumber";
 
-        return PageRequest.of(validPage, validSize);
+    public static  Pageable buildCustomPaginationWithPageAndSize(int page, int size){
+        return buildFullCustomPagination(page, size, PROJECT_LIST_SORT_FIELD, "asc");
     }
 
     public static Pageable buildFullCustomPagination(int page, int size, String sortBy, String sortDir){

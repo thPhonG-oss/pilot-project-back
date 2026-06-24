@@ -20,7 +20,6 @@ import vn.elca.training.repository.ProjectRepository;
 import vn.elca.training.service.EmployeeService;
 import vn.elca.training.service.GroupService;
 import vn.elca.training.service.ProjectService;
-import vn.elca.training.util.PaginationUtil;
 import vn.elca.training.validator.ProjectValidator;
 
 import java.util.ArrayList;
@@ -36,9 +35,6 @@ import java.util.stream.Collectors;
  */
 @Service
 public class ProjectServiceImpl implements ProjectService {
-
-    private static final String PROJECT_DEFAULT_SORT_BY = "projectNumber";
-    private static final String PROJECT_DEFAULT_SORT_DIR = "ASC";
 
     private static final Logger log = LoggerFactory.getLogger(ProjectServiceImpl.class);
     private final ProjectRepository projectRepository;
@@ -60,8 +56,7 @@ public class ProjectServiceImpl implements ProjectService {
 
     @Override
     @Transactional(readOnly = true)
-    public Page<ProjectDto> findAll() {
-        Pageable pageable = PaginationUtil.buildPaginationWithCustomSorting(PROJECT_DEFAULT_SORT_BY, PROJECT_DEFAULT_SORT_DIR);
+    public Page<ProjectDto> findAll(Pageable pageable) {
         return projectRepository.findAll(pageable).map(projectMapper::toProjectSummary);
     }
 
@@ -102,12 +97,16 @@ public class ProjectServiceImpl implements ProjectService {
     @Override
     @Transactional(readOnly = true)
     public Page<ProjectDto> findProjectsByCriteria(final String keyword, final Status status, final Pageable pageable) {
-        if(keyword == null || keyword.trim().isEmpty() && status == null) {
+        if (hasNoSearchCriteria(keyword, status)) {
             return projectRepository.findAll(pageable).map(projectMapper::toProjectSummary);
         }
 
         return projectRepository.findProjectsByCriteria(keyword, status, pageable)
                 .map(projectMapper::toProjectSummary);
+    }
+
+    private boolean hasNoSearchCriteria(final String keyword, final Status status) {
+        return (keyword == null || keyword.trim().isEmpty()) && status == null;
     }
 
     @Override

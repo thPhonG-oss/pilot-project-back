@@ -16,7 +16,7 @@ import java.util.List;
  */
 public interface ProjectService {
 
-    Page<ProjectDto> findAll();
+    Page<ProjectDto> findAll(Pageable pageable);
 
     ProjectDto findProjectById(final Long id);
 
