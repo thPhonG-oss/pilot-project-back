@@ -15,6 +15,7 @@ import vn.elca.training.service.MessageService;
 import javax.persistence.OptimisticLockException;
 import javax.servlet.http.HttpServletRequest;
 import javax.validation.ConstraintViolationException;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -64,8 +65,9 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(BusinessException.class)
-    public ResponseEntity<ErrorResponse<Object>> handleBusinessException(BusinessException ex) {
+    public ResponseEntity<ErrorResponse<FieldErrorResponse>> handleBusinessException(BusinessException ex) {
         ErrorCode errorCode = ex.getErrorCode();
+        String message = getMessage(errorCode.getMessageKey(), ex.getArgs());
 
         if (errorCode.getHttpStatus().is5xxServerError()) {
             log.error("Business error {}: {}", errorCode, ex.getMessage(), ex);
@@ -76,8 +78,8 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(errorCode.getHttpStatus())
                 .body(new ErrorResponse<>(
                         errorCode.getCode(),
-                        getMessage(errorCode.getMessageKey(), ex.getArgs()),
-                        null
+                        message,
+                        buildBusinessErrorDetails(errorCode, message)
                 ));
     }
 
@@ -95,17 +97,18 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(DataIntegrityViolationException.class)
-    public ResponseEntity<ErrorResponse<Object>> handleDataIntegrityViolationException(DataIntegrityViolationException ex) {
+    public ResponseEntity<ErrorResponse<FieldErrorResponse>> handleDataIntegrityViolationException(DataIntegrityViolationException ex) {
         String constraintName = resolveConstraintName(ex);
         log.warn("Data integrity violation (constraint={}): {}", constraintName, ex.getMostSpecificCause().getMessage());
 
         ErrorCode errorCode = mapConstraintToErrorCode(constraintName);
+        String message = getMessage(errorCode.getMessageKey());
 
         return ResponseEntity.status(errorCode.getHttpStatus())
                 .body(new ErrorResponse<>(
                         errorCode.getCode(),
-                        getMessage(errorCode.getMessageKey()),
-                        null
+                        message,
+                        buildBusinessErrorDetails(errorCode, message)
                 ));
     }
 
@@ -126,6 +129,16 @@ public class GlobalExceptionHandler {
             return ErrorCode.PROJECT_NUMBER_EXISTS;
         }
         return ErrorCode.DATA_INTEGRITY_VIOLATION;
+    }
+
+    private List<FieldErrorResponse> buildBusinessErrorDetails(ErrorCode errorCode, String message) {
+        if (errorCode.getField() == null || errorCode.getField().trim().isEmpty()) {
+            return null;
+        }
+
+        List<FieldErrorResponse> details = new ArrayList<>(1);
+        details.add(new FieldErrorResponse(errorCode.getField(), message));
+        return details;
     }
 
     @ExceptionHandler(MethodArgumentTypeMismatchException.class)
