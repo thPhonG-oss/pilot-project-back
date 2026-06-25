@@ -157,8 +157,7 @@ public class ProjectServiceImpl implements ProjectService {
 
         List<Project> projects = projectRepository.findAllById(distinctIds);
         projectValidator.validateDeleteProjects(projects, distinctIds);
-        projectRepository.deleteEmployeeLinksByProjectIds(distinctIds);
-        projectRepository.deleteProjectsByIds(distinctIds);
+        projectRepository.deleteAll(projects); // Should use method query to avoid violating concurrent update handling
     }
 
     private void syncProjectEmployees(Project targetProject, List<String> requestedVisas){
