@@ -35,7 +35,6 @@ public class ProjectCreationRequest {
 
     private LocalDate endDate;
 
-    @NotNull(message = "{project.visa.required}")
     private List<String> visas;
 
     @NotNull(message = "{project.group.required}")

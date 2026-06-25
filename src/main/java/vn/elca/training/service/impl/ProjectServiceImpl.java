@@ -118,7 +118,10 @@ public class ProjectServiceImpl implements ProjectService {
 
         // 2. find the target group and target employees
         Group group = groupService.findById(request.getGroupId());
-        List<Employee> employees = request.getVisas().isEmpty() ? Collections.emptyList() :  employeeService.findEmployeesByVisas(request.getVisas());
+        Set<String> requestedVisas = toVisaSet(request.getVisas());
+        List<Employee> employees = requestedVisas.isEmpty()
+                ? Collections.emptyList()
+                : employeeService.findEmployeesByVisas(new ArrayList<>(requestedVisas));
 
         // 3. create new project
         Project project = new Project();
