@@ -13,6 +13,7 @@ public class PaginationUtil {
     private static final int DEFAULT_PAGE = 1;
     private static final int MAX_PAGE = 50;
     private static final int DEFAULT_SIZE = 5;
+    private static final int MIN_SIZE = 1;
     private static final int MAX_SIZE = 50;
     private static final String DEFAULT_SORT_BY = "id";
     private static final Set<String> ALLOWED_SORT_FIELDS;
@@ -50,9 +51,15 @@ public class PaginationUtil {
     }
 
     public static Pageable buildFullCustomPagination(int page, int size, String sortBy, String sortDir){
+        if (page < DEFAULT_PAGE || page > MAX_PAGE) {
+            throw new BusinessException(ErrorCode.BAD_REQUEST);
+        }
+        if (size < MIN_SIZE || size > MAX_SIZE) {
+            throw new BusinessException(ErrorCode.BAD_REQUEST);
+        }
 
-        int validPage = page < DEFAULT_PAGE ? DEFAULT_PAGE : Math.min(page - 1, MAX_PAGE);
-        int validSize = size < DEFAULT_SIZE ? DEFAULT_SIZE : Math.min(size, MAX_SIZE);
+        int validPage = page - 1;
+        int validSize = size;
 
         if (!ALLOWED_SORT_FIELDS.contains(sortBy)) {
             throw new BusinessException(ErrorCode.INVALID_SORT_FIELD);

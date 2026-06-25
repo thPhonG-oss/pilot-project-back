@@ -97,7 +97,7 @@ public class ProjectController {
     private PageResponse<ProjectDto> toPageResponse(Page<ProjectDto> projectPage) {
         return new PageResponse<>(
                 projectPage.getNumber() + 1,
-                projectPage.getNumberOfElements(),
+                projectPage.getSize(),
                 projectPage.getContent(),
                 projectPage.getTotalPages(),
                 projectPage.getTotalElements(),
