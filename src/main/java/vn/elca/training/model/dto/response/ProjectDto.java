@@ -35,4 +35,6 @@ public class ProjectDto {
     private List<EmployeeDto> employeeDtos;
 
     private GroupDto groupDto;
+
+    private Long version;
 }

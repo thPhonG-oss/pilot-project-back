@@ -3,6 +3,7 @@ package vn.elca.training.web;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import vn.elca.training.model.dto.request.ProjectDeleteRequest;
@@ -73,11 +74,12 @@ public class ProjectController {
     }
 
     @PutMapping("/{id}")
-    public ProjectDto updateProject(
+    @ResponseStatus(HttpStatus.OK)
+    public void updateProject(
             @Min(value = 1L, message = "{project.number.positive}") @PathVariable final Long id,
             @RequestBody @Valid final ProjectUpdateRequest updateRequest
     ){
-        return projectService.updateProject(id, updateRequest);
+        projectService.updateProject(id, updateRequest);
     }
 
     @DeleteMapping("/{id}")

@@ -20,7 +20,7 @@ public interface ProjectService {
 
     ProjectDto findProjectById(final Long id);
 
-    ProjectDto updateProject(final Long id, final @Valid ProjectUpdateRequest updateRequest);
+    void updateProject(final Long id, final @Valid ProjectUpdateRequest updateRequest);
 
     Page<ProjectDto> findProjectsByCriteria(final String keyword, final Status status, final Pageable pageable);
 

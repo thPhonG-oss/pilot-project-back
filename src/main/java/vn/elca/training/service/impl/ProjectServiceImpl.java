@@ -2,6 +2,7 @@ package vn.elca.training.service.impl;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -72,13 +73,19 @@ public class ProjectServiceImpl implements ProjectService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public ProjectDto updateProject(final Long id, final ProjectUpdateRequest updateRequest) {
+    public void updateProject(final Long id, final ProjectUpdateRequest updateRequest) {
         log.info("Update info for project with id: {}", id);
 
         // 1. validate and return a target updated project
         Project targetProject = projectValidator.validateUpdateProject(id, updateRequest);
 
+        // check version
+        if(!targetProject.getVersion().equals(updateRequest.getVersion())) {
+            throw new OptimisticLockingFailureException("Version changes are not equal");
+        }
+
         // 2. find target group
+        log.info("Validate existing group by id: {}", updateRequest.getGroupId());
         Group group = groupService.findById(updateRequest.getGroupId());
 
         // 3. clear employees and update new employees
@@ -90,10 +97,10 @@ public class ProjectServiceImpl implements ProjectService {
         targetProject.setStatus(updateRequest.getStatus());
         targetProject.setStartDate(updateRequest.getStartDate());
         targetProject.setEndDate(updateRequest.getEndDate());
+
         targetProject.assignGroup(group);
 
         log.info("Updated project id={}", id);
-        return projectMapper.toProjectDto(targetProject);
     }
 
     @Override

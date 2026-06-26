@@ -3,6 +3,7 @@ package vn.elca.training.model.exception;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.orm.ObjectOptimisticLockingFailureException;
@@ -83,7 +84,7 @@ public class GlobalExceptionHandler {
                 ));
     }
 
-    @ExceptionHandler({OptimisticLockException.class, ObjectOptimisticLockingFailureException.class})
+    @ExceptionHandler({OptimisticLockException.class, ObjectOptimisticLockingFailureException.class, OptimisticLockingFailureException.class})
     public ResponseEntity<ErrorResponse<Object>> handleOptimisticLockException(Exception ex) {
         log.warn("Optimistic lock conflict", ex);
         ErrorCode errorCode = ErrorCode.CONCURRENT_UPDATE;

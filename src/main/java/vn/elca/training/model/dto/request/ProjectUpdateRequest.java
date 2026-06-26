@@ -35,4 +35,7 @@ public class ProjectUpdateRequest {
 
     @NotNull(message = "{project.group.required}")
     private Long groupId;
+
+    @NotNull
+    private Long version;
 }
