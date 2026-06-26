@@ -193,7 +193,7 @@ class ProjectControllerTest {
       mockMvc.perform(get(PROJECTS_API).accept(MediaType.APPLICATION_JSON))
           .andExpect(status().isOk())
           .andExpect(jsonPath("$.pageNumber").value(1))
-          .andExpect(jsonPath("$.pageSize").value(1))
+          .andExpect(jsonPath("$.pageSize").value(5))
           .andExpect(jsonPath("$.totalElements").value(1))
           .andExpect(jsonPath("$.totalPages").value(1))
           .andExpect(jsonPath("$.last").value(true))

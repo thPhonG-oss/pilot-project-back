@@ -300,8 +300,7 @@ class ProjectServiceImplTest {
 
             verify(projectRepository).findAllById(requestedIds);
             verify(projectValidator).validateDeleteProjects(projects, requestedIds);
-            verify(projectRepository).deleteEmployeeLinksByProjectIds(requestedIds);
-            verify(projectRepository).deleteProjectsByIds(requestedIds);
+            verify(projectRepository).deleteAll(projects);
         }
     }
 
@@ -490,8 +489,7 @@ class ProjectServiceImplTest {
 
             verify(projectRepository).findAllById(distinctIds);
             verify(projectValidator).validateDeleteProjects(projects, distinctIds);
-            verify(projectRepository).deleteEmployeeLinksByProjectIds(distinctIds);
-            verify(projectRepository).deleteProjectsByIds(distinctIds);
+            verify(projectRepository).deleteAll(projects);
         }
 
         @Test
@@ -507,8 +505,7 @@ class ProjectServiceImplTest {
                     .satisfies(ex -> assertThat(((BusinessException) ex).getErrorCode())
                             .isEqualTo(ErrorCode.PROJECT_NOT_FOUND));
 
-            verify(projectRepository, never()).deleteEmployeeLinksByProjectIds(anyList());
-            verify(projectRepository, never()).deleteProjectsByIds(anyList());
+            verify(projectRepository, never()).deleteAll(anyList());
         }
 
         @Test
@@ -531,8 +528,7 @@ class ProjectServiceImplTest {
                     .satisfies(ex -> assertThat(((BusinessException) ex).getErrorCode())
                             .isEqualTo(ErrorCode.PROJECT_DELETE_NOT_ALLOWED));
 
-            verify(projectRepository, never()).deleteEmployeeLinksByProjectIds(anyList());
-            verify(projectRepository, never()).deleteProjectsByIds(anyList());
+            verify(projectRepository, never()).deleteAll(anyList());
         }
     }
 }
