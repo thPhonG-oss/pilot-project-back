@@ -30,7 +30,6 @@ public class GroupServiceImpl implements GroupService {
         return groupRepository.findById(id).orElseThrow(() -> new BusinessException(ErrorCode.GROUP_NOT_FOUND));
     }
 
-    @Cacheable(value = "groups")
     @Override
     @Transactional(readOnly = true)
     public List<GroupDto> findAll() {
