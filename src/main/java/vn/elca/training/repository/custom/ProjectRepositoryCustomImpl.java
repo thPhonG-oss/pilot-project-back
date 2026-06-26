@@ -25,7 +25,25 @@ public class ProjectRepositoryCustomImpl implements ProjectRepositoryCustom{
     public Page<Project> findProjectsByCriteria(String keyword, Status status, Pageable pageable) {
         QProject project = QProject.project;
 
+
+
         BooleanBuilder builder = buildCondition(keyword, status);
+
+        Long total = new JPAQuery<Long>(entityManager)
+                .select(project.count())
+                .from(project)
+                .where(builder)
+                .fetchOne();
+
+        // early return if no data
+        if(total == null || total == 0L) {
+            return Page.empty(pageable);
+        }
+
+        // guard against out-of-range page requests
+        if (pageable.getOffset() >= total) {
+            return Page.empty(pageable);
+        }
 
         List<Project> projects = new JPAQuery<Project>(entityManager)
                 .select(project)
@@ -36,13 +54,7 @@ public class ProjectRepositoryCustomImpl implements ProjectRepositoryCustom{
                 .orderBy(project.projectNumber.asc())
                 .fetch();
 
-        Long total = new JPAQuery<Long>(entityManager)
-                .select(project.count())
-                .from(project)
-                .where(builder)
-                .fetchOne();
-
-        return new PageImpl<>(projects, pageable, total == null ? 0 : total);
+        return new PageImpl<>(projects, pageable, total);
     }
 
     private BooleanBuilder buildCondition(String keyword, Status status){

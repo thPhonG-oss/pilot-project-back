@@ -18,8 +18,6 @@ import java.util.Optional;
  */
 @Repository
 public interface ProjectRepository extends JpaRepository<Project, Long>, QuerydslPredicateExecutor<Project>, ProjectRepositoryCustom {
-    Page<Project> findAllByNameContainingIgnoreCase(String name, Pageable pageable);
-
     boolean existsByProjectNumber(Long projectNumber);
 
     @EntityGraph(attributePaths = {"employees", "group", "group.leader"})

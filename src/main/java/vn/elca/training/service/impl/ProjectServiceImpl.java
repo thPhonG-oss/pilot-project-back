@@ -29,6 +29,8 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import static vn.elca.training.model.exception.ErrorCode.BAD_REQUEST;
+
 /**
  * @author vlp
  *
@@ -152,6 +154,8 @@ public class ProjectServiceImpl implements ProjectService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void deleteProjects(final List<Long> ids) {
+        if (ids == null || ids.isEmpty()) throw new BusinessException(ErrorCode.BAD_REQUEST);
+
         List<Long> distinctIds = ids.stream().distinct().collect(Collectors.toList());
         log.info("Delete projects with ids: {}", distinctIds);
 
