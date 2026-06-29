@@ -16,6 +16,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindException;
 import org.springframework.validation.BindingResult;
+import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -49,13 +50,25 @@ public class GlobalExceptionHandler {
         List<FieldErrorResponse> details = bindingResult
                 .getFieldErrors()
                 .stream()
-                .map(error -> new FieldErrorResponse(error.getField(), error.getDefaultMessage()))
+                .map(error -> toFieldErrorResponse(bindingResult, error))
                 .collect(Collectors.toList());
 
         log.debug("Request validation failed: {}", details);
 
         return ResponseEntity.badRequest()
                 .body(new ErrorResponse<>(null, getMessage("validation.failed"), details));
+    }
+
+    private FieldErrorResponse toFieldErrorResponse(BindingResult bindingResult, FieldError error) {
+        // Binding/type-conversion failures (e.g. "NE" -> enum Status) carry the raw conversion
+        // exception text as their default message instead of a resolved i18n message.
+        if (error.isBindingFailure()) {
+            Class<?> fieldType = bindingResult.getFieldType(error.getField());
+            String requiredType = fieldType != null ? fieldType.getSimpleName() : "unknown";
+            return new FieldErrorResponse(error.getField(),
+                    getMessage("validation.typeMismatch", error.getField(), requiredType));
+        }
+        return new FieldErrorResponse(error.getField(), error.getDefaultMessage());
     }
 
     @ExceptionHandler(ConstraintViolationException.class)
@@ -80,9 +93,9 @@ public class GlobalExceptionHandler {
         String message = getMessage(errorCode.getMessageKey(), ex.getArgs());
 
         if (errorCode.getHttpStatus().is5xxServerError()) {
-            log.error("Business error {}: {}", errorCode, ex.getMessage(), ex);
+            log.error("Business error {}: {}", errorCode, message, ex);
         } else {
-            log.warn("Business error {}: {}", errorCode, ex.getMessage());
+            log.warn("Business error {}: {}", errorCode, message);
         }
 
         return ResponseEntity.status(errorCode.getHttpStatus())
