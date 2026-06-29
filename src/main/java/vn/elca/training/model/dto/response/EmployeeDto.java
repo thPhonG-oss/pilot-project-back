@@ -9,6 +9,7 @@ import lombok.Setter;
 @NoArgsConstructor @AllArgsConstructor
 public class EmployeeDto {
     private Long id;
+    private Long version;
     private String visa;
     private String firstName;
     private String lastName;

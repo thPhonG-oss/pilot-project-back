@@ -1,6 +1,7 @@
 package vn.elca.training.service.impl;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import vn.elca.training.mapper.EmployeeMapper;
 import vn.elca.training.model.dto.response.EmployeeDto;
 import vn.elca.training.model.entity.Employee;
@@ -17,6 +18,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
+@Transactional(readOnly = true)
 public class EmployeeServiceImpl implements EmployeeService {
     private final EmployeeRepository employeeRepository;
     private final EmployeeMapper employeeMapper;

@@ -56,7 +56,7 @@ public class GlobalExceptionHandler {
         log.debug("Request validation failed: {}", details);
 
         return ResponseEntity.badRequest()
-                .body(new ErrorResponse<>(null, getMessage("validation.failed"), details));
+                .body(new ErrorResponse<>(ErrorCode.VALIDATION_FAILED.getCode(), getMessage("validation.failed"), details));
     }
 
     private FieldErrorResponse toFieldErrorResponse(BindingResult bindingResult, FieldError error) {
@@ -84,7 +84,7 @@ public class GlobalExceptionHandler {
         log.debug("Constraint violation: {}", details);
 
         return ResponseEntity.badRequest()
-                .body(new ErrorResponse<>(null, getMessage("validation.failed"), details));
+                .body(new ErrorResponse<>(ErrorCode.VALIDATION_FAILED.getCode(), getMessage("validation.failed"), details));
     }
 
     @ExceptionHandler(BusinessException.class)

@@ -1,6 +1,5 @@
 package vn.elca.training.service.impl;
 
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -16,6 +15,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
+@Transactional(readOnly = true)
 public class GroupServiceImpl implements GroupService {
     private final GroupRepository groupRepository;
     private final GroupMapper groupMapper;
@@ -31,7 +31,6 @@ public class GroupServiceImpl implements GroupService {
     }
 
     @Override
-    @Transactional(readOnly = true)
     public List<GroupDto> findAll() {
         return groupRepository.findAll(Sort.by("id").ascending()).stream()
                 .map(groupMapper::toDto)

@@ -7,6 +7,7 @@ import org.springframework.http.HttpStatus;
 @Getter
 @AllArgsConstructor
 public enum ErrorCode {
+    VALIDATION_FAILED(HttpStatus.BAD_REQUEST, "1000", "validation.failed", null),
     PROJECT_NOT_FOUND(HttpStatus.NOT_FOUND, "1001", "project.notFound", null),
     PROJECT_NUMBER_EXISTS(HttpStatus.CONFLICT, "1002", "project.number.exists", "projectNumber"),
     INVALID_END_DATE(HttpStatus.BAD_REQUEST, "1003", "project.endDate.invalid", "endDate"),

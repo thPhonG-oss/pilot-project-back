@@ -96,7 +96,9 @@ public class ProjectServiceImpl implements ProjectService {
 
     @Override
     @Transactional(readOnly = true)
-    public Page<ProjectDto> findProjectsByCriteria(final ProjectSearchCondition condition, final Pageable pageable) {
+    public Page<ProjectDto> findProjectsByCriteria(
+            final ProjectSearchCondition condition, final Pageable pageable
+    ) {
         projectValidator.validateSearchCondition(condition);
 
         if (hasNoSearchCriteria(condition)) {

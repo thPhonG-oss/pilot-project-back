@@ -20,6 +20,8 @@ import java.util.List;
 public class ProjectDto {
     private Long id;
 
+    private Long version;
+
     private Long projectNumber;
 
     private String name;
@@ -35,6 +37,4 @@ public class ProjectDto {
     private List<EmployeeDto> employeeDtos;
 
     private GroupDto groupDto;
-
-    private Long version;
 }

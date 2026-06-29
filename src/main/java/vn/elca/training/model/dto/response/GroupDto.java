@@ -11,6 +11,7 @@ import lombok.Setter;
 @AllArgsConstructor
 public class GroupDto {
     private Long id;
+    private Long version;
     private String leaderVisa;
     private String leaderName;
 }
