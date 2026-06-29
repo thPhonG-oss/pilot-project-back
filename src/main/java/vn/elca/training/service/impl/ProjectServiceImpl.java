@@ -9,12 +9,12 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import vn.elca.training.mapper.ProjectMapper;
 import vn.elca.training.model.dto.request.ProjectCreationRequest;
+import vn.elca.training.model.dto.request.ProjectSearchCondition;
 import vn.elca.training.model.dto.request.ProjectUpdateRequest;
 import vn.elca.training.model.dto.response.ProjectDto;
 import vn.elca.training.model.entity.Employee;
 import vn.elca.training.model.entity.Group;
 import vn.elca.training.model.entity.Project;
-import vn.elca.training.model.entity.Status;
 import vn.elca.training.model.exception.BusinessException;
 import vn.elca.training.model.exception.ErrorCode;
 import vn.elca.training.repository.ProjectRepository;
@@ -24,13 +24,10 @@ import vn.elca.training.service.ProjectService;
 import vn.elca.training.validator.ProjectValidator;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
-
-import static vn.elca.training.model.exception.ErrorCode.BAD_REQUEST;
 
 /**
  * @author vlp
@@ -56,12 +53,6 @@ public class ProjectServiceImpl implements ProjectService {
         this.projectMapper = projectMapper;
     }
 
-
-    @Override
-    @Transactional(readOnly = true)
-    public Page<ProjectDto> findAll(Pageable pageable) {
-        return projectRepository.findAll(pageable).map(projectMapper::toProjectSummary);
-    }
 
     @Override
     @Transactional(readOnly = true)
@@ -105,17 +96,30 @@ public class ProjectServiceImpl implements ProjectService {
 
     @Override
     @Transactional(readOnly = true)
-    public Page<ProjectDto> findProjectsByCriteria(final String keyword, final Status status, final Pageable pageable) {
-        if (hasNoSearchCriteria(keyword, status)) {
+    public Page<ProjectDto> findProjectsByCriteria(final ProjectSearchCondition condition, final Pageable pageable) {
+        projectValidator.validateSearchCondition(condition);
+
+        if (hasNoSearchCriteria(condition)) {
             return projectRepository.findAll(pageable).map(projectMapper::toProjectSummary);
         }
 
-        return projectRepository.findProjectsByCriteria(keyword, status, pageable)
+        return projectRepository.findProjectsByCriteria(condition, pageable)
                 .map(projectMapper::toProjectSummary);
     }
 
-    private boolean hasNoSearchCriteria(final String keyword, final Status status) {
-        return (keyword == null || keyword.trim().isEmpty()) && status == null;
+    private boolean hasNoSearchCriteria(final ProjectSearchCondition condition) {
+        return isBlank(condition.getKeyword())
+                && condition.getStatus() == null
+                && isBlank(condition.getLeaderVisa())
+                && isBlank(condition.getMemberVisa())
+                && condition.getStartDateFrom() == null
+                && condition.getStartDateTo() == null
+                && condition.getEndDateFrom() == null
+                && condition.getEndDateTo() == null;
+    }
+
+    private boolean isBlank(String value) {
+        return value == null || value.trim().isEmpty();
     }
 
     @Override

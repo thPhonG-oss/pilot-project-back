@@ -20,7 +20,7 @@ VALUES (1),
 
 INSERT INTO PROJECT (PROJECT_NUMBER, NAME, CUSTOMER, STATUS, START_DATE, END_DATE, GROUP_ID)
 VALUES
-    ('3116', 'Facturation/Encaissements', 'Les Rataites Populaires', 'NEW', '2004-02-25', null, 1),
+    ('3116', 'Facturation/Encaissements', 'Les Rataites Populaires', 'NEW', '2004-02-25', '2026-12-31', 1),
     ('3118', 'GKBWEB', 'GKB', 'FIN', '2002-10-10', '2003-10-10', 1),
     ('7157', 'MGBAHM-Maint2015', 'MGB Tourism', 'INP', '2006-09-24', null, 2),
     ('7174', 'SOMED-SPITEX MAINT', 'SOMED-SPITEX MAINT', 'NEW', '2015-10-05', null, 2),

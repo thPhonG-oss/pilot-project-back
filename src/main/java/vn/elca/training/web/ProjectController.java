@@ -3,21 +3,19 @@ package vn.elca.training.web;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import vn.elca.training.model.dto.request.ProjectDeleteRequest;
+import vn.elca.training.model.dto.request.ProjectSearchCondition;
 import vn.elca.training.model.dto.response.PageResponse;
 import vn.elca.training.model.dto.response.ProjectDto;
 import vn.elca.training.model.dto.request.ProjectCreationRequest;
 import vn.elca.training.model.dto.request.ProjectUpdateRequest;
-import vn.elca.training.model.entity.Status;
 import vn.elca.training.service.ProjectService;
 import vn.elca.training.util.PaginationUtil;
 
 import javax.validation.Valid;
 import javax.validation.constraints.Min;
-import javax.validation.constraints.Size;
 
 /**
  * @author gtn
@@ -40,32 +38,16 @@ public class ProjectController {
         return projectService.createProject(request);
     }
 
-    @GetMapping
-    public PageResponse<ProjectDto> findAllProjects(
-            @RequestParam(required = false, defaultValue = "1") final int page,
-            @RequestParam(required = false, defaultValue = "10") final int size
-    ) {
-        Pageable pageable = PaginationUtil.buildFullCustomPagination(
-                page,
-                size,
-                PaginationUtil.PROJECT_LIST_SORT_FIELD,
-                "ASC"
-        );
-        return toPageResponse(projectService.findAll(pageable));
-    }
-
     @GetMapping("/search")
     public PageResponse<ProjectDto> search(
-            @RequestParam(required = false)
-            @Size(max = 50, message = "{search.keyword.max-length}")
-            final String keyword,
-            @RequestParam(required = false) final Status status,
+            @Valid final ProjectSearchCondition condition,
             @RequestParam(required = false, defaultValue = "1") final int page,
-            @RequestParam(required = false, defaultValue = "10") final int size
+            @RequestParam(required = false, defaultValue = "10") final int size,
+            @RequestParam(required = false, defaultValue = "projectNumber") final String sortBy,
+            @RequestParam(required = false, defaultValue = "true")  final boolean asc
             ) {
-
-        Pageable pageable = PaginationUtil.buildCustomPaginationWithPageAndSize(page, size);
-        return toPageResponse(projectService.findProjectsByCriteria(keyword, status, pageable));
+        Pageable pageable = PaginationUtil.buildFullCustomPagination(page, size, sortBy, asc);
+        return toPageResponse(projectService.findProjectsByCriteria(condition, pageable));
     }
 
     @GetMapping("/{id}")

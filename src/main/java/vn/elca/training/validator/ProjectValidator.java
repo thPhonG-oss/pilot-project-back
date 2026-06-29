@@ -3,6 +3,7 @@ package vn.elca.training.validator;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import vn.elca.training.model.dto.request.ProjectCreationRequest;
+import vn.elca.training.model.dto.request.ProjectSearchCondition;
 import vn.elca.training.model.dto.request.ProjectUpdateRequest;
 import vn.elca.training.model.entity.Project;
 import vn.elca.training.model.entity.Status;
@@ -38,6 +39,11 @@ public class ProjectValidator {
         validateDeletableStatus(Collections.singletonList(project));
     }
 
+    public void validateSearchCondition(ProjectSearchCondition condition) {
+        validateRange(condition.getStartDateFrom(), condition.getStartDateTo(), ErrorCode.INVALID_SEARCH_START_DATE_RANGE);
+        validateRange(condition.getEndDateFrom(), condition.getEndDateTo(), ErrorCode.INVALID_SEARCH_END_DATE_RANGE);
+    }
+
     public void validateDeleteProjects(List<Project> foundProjects, List<Long> requestedIds) {
         Set<Long> foundIds = foundProjects.stream()
                 .map(Project::getId)
@@ -63,8 +69,13 @@ public class ProjectValidator {
     }
 
     private void validateDateRange(LocalDate start, LocalDate end){
-        if(end != null && end.isBefore(start))
-            throw new BusinessException(ErrorCode.INVALID_END_DATE);
+        validateRange(start, end, ErrorCode.INVALID_END_DATE);
+    }
+
+    private void validateRange(LocalDate from, LocalDate to, ErrorCode errorCode) {
+        if (from != null && to != null && to.isBefore(from)) {
+            throw new BusinessException(errorCode);
+        }
     }
 
     private void validateProjectNumberExists(Long projectNumber){

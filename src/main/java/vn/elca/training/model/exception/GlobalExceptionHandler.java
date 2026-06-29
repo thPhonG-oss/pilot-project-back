@@ -1,25 +1,27 @@
 package vn.elca.training.model.exception;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.stream.Collectors;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.validation.ConstraintViolationException;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.orm.ObjectOptimisticLockingFailureException;
+import org.springframework.validation.BindException;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
-import vn.elca.training.service.MessageService;
 
-import javax.persistence.OptimisticLockException;
-import javax.servlet.http.HttpServletRequest;
-import javax.validation.ConstraintViolationException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.stream.Collectors;
+import vn.elca.training.service.MessageService;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
@@ -33,15 +35,24 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ErrorResponse<FieldErrorResponse>> handleValidationException(
-            MethodArgumentNotValidException ex
-    ) {
-        List<FieldErrorResponse> details = ex.getBindingResult()
+            MethodArgumentNotValidException ex) {
+        return buildValidationErrorResponse(ex.getBindingResult());
+    }
+
+    @ExceptionHandler(BindException.class)
+    public ResponseEntity<ErrorResponse<FieldErrorResponse>> handleBindException(BindException ex) {
+        // thrown for @Valid query-param binding (e.g. ProjectSearchCondition), unlike @RequestBody above
+        return buildValidationErrorResponse(ex);
+    }
+
+    private ResponseEntity<ErrorResponse<FieldErrorResponse>> buildValidationErrorResponse(BindingResult bindingResult) {
+        List<FieldErrorResponse> details = bindingResult
                 .getFieldErrors()
                 .stream()
                 .map(error -> new FieldErrorResponse(error.getField(), error.getDefaultMessage()))
                 .collect(Collectors.toList());
 
-        log.debug("Request body validation failed: {}", details);
+        log.debug("Request validation failed: {}", details);
 
         return ResponseEntity.badRequest()
                 .body(new ErrorResponse<>(null, getMessage("validation.failed"), details));
@@ -49,14 +60,12 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(ConstraintViolationException.class)
     public ResponseEntity<ErrorResponse<FieldErrorResponse>> handleConstraintViolationException(
-            ConstraintViolationException ex
-    ) {
+            ConstraintViolationException ex) {
         List<FieldErrorResponse> details = ex.getConstraintViolations()
                 .stream()
                 .map(error -> new FieldErrorResponse(
                         error.getPropertyPath().toString(),
-                        error.getMessage()
-                ))
+                        error.getMessage()))
                 .collect(Collectors.toList());
 
         log.debug("Constraint violation: {}", details);
@@ -80,11 +89,10 @@ public class GlobalExceptionHandler {
                 .body(new ErrorResponse<>(
                         errorCode.getCode(),
                         message,
-                        buildBusinessErrorDetails(errorCode, message)
-                ));
+                        buildBusinessErrorDetails(errorCode, message)));
     }
 
-    @ExceptionHandler({OptimisticLockException.class, ObjectOptimisticLockingFailureException.class, OptimisticLockingFailureException.class})
+    @ExceptionHandler({ OptimisticLockingFailureException.class })
     public ResponseEntity<ErrorResponse<Object>> handleOptimisticLockException(Exception ex) {
         log.warn("Optimistic lock conflict", ex);
         ErrorCode errorCode = ErrorCode.CONCURRENT_UPDATE;
@@ -93,14 +101,15 @@ public class GlobalExceptionHandler {
                 .body(new ErrorResponse<>(
                         errorCode.getCode(),
                         getMessage(errorCode.getMessageKey()),
-                        null
-                ));
+                        null));
     }
 
     @ExceptionHandler(DataIntegrityViolationException.class)
-    public ResponseEntity<ErrorResponse<FieldErrorResponse>> handleDataIntegrityViolationException(DataIntegrityViolationException ex) {
+    public ResponseEntity<ErrorResponse<FieldErrorResponse>> handleDataIntegrityViolationException(
+            DataIntegrityViolationException ex) {
         String constraintName = resolveConstraintName(ex);
-        log.warn("Data integrity violation (constraint={}): {}", constraintName, ex.getMostSpecificCause().getMessage());
+        log.warn("Data integrity violation (constraint={}): {}", constraintName,
+                ex.getMostSpecificCause().getMessage());
 
         ErrorCode errorCode = mapConstraintToErrorCode(constraintName);
         String message = getMessage(errorCode.getMessageKey());
@@ -109,8 +118,7 @@ public class GlobalExceptionHandler {
                 .body(new ErrorResponse<>(
                         errorCode.getCode(),
                         message,
-                        buildBusinessErrorDetails(errorCode, message)
-                ));
+                        buildBusinessErrorDetails(errorCode, message)));
     }
 
     private String resolveConstraintName(DataIntegrityViolationException ex) {
@@ -144,14 +152,12 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(MethodArgumentTypeMismatchException.class)
     public ResponseEntity<ErrorResponse<FieldErrorResponse>> handleMethodArgumentTypeMismatchException(
-            MethodArgumentTypeMismatchException ex
-    ) {
+            MethodArgumentTypeMismatchException ex) {
         String parameterName = ex.getName();
         String requiredType = ex.getRequiredType() != null ? ex.getRequiredType().getSimpleName() : "unknown";
         String detailMessage = getMessage("validation.typeMismatch", parameterName, requiredType);
         List<FieldErrorResponse> details = Collections.singletonList(
-                new FieldErrorResponse(parameterName, detailMessage)
-        );
+                new FieldErrorResponse(parameterName, detailMessage));
 
         log.debug("Argument type mismatch: {}", detailMessage);
         ErrorCode errorCode = ErrorCode.INVALID_ARGUMENT_TYPE;
@@ -160,8 +166,7 @@ public class GlobalExceptionHandler {
                 .body(new ErrorResponse<>(
                         errorCode.getCode(),
                         getMessage("validation.failed"),
-                        details
-                ));
+                        details));
     }
 
     @ExceptionHandler(Exception.class)
@@ -169,7 +174,8 @@ public class GlobalExceptionHandler {
         log.error("Unexpected error on {} {}", request.getMethod(), request.getRequestURI(), ex);
 
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(new ErrorResponse<>(ErrorCode.UNCATEGORIZED_EXCEPTION.getCode(), getMessage("error.unexpected"), null));
+                .body(new ErrorResponse<>(ErrorCode.UNCATEGORIZED_EXCEPTION.getCode(), getMessage("error.unexpected"),
+                        null));
     }
 
     private String getMessage(String messageCode, Object... args) {

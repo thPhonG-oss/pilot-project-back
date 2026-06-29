@@ -19,6 +19,8 @@ public enum ErrorCode {
     CONCURRENT_UPDATE(HttpStatus.CONFLICT, "1010", "project.concurrentUpdate", null),
     INVALID_ARGUMENT_TYPE(HttpStatus.BAD_REQUEST, "1011", "validation.typeMismatch", null),
     DATA_INTEGRITY_VIOLATION(HttpStatus.CONFLICT, "1012", "data.integrity.violation", null),
+    INVALID_SEARCH_START_DATE_RANGE(HttpStatus.BAD_REQUEST, "1013", "search.startDate.range.invalid", "startDateTo"),
+    INVALID_SEARCH_END_DATE_RANGE(HttpStatus.BAD_REQUEST, "1014", "search.endDate.range.invalid", "endDateTo"),
     UNCATEGORIZED_EXCEPTION(HttpStatus.INTERNAL_SERVER_ERROR, "9999", "error.unexpected", null),
     ;
 
