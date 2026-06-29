@@ -9,6 +9,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
@@ -17,6 +18,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.test.util.ReflectionTestUtils;
 import vn.elca.training.mapper.ProjectMapper;
 import vn.elca.training.model.dto.request.ProjectCreationRequest;
+import vn.elca.training.model.dto.request.ProjectSearchCondition;
 import vn.elca.training.model.dto.request.ProjectUpdateRequest;
 import vn.elca.training.model.dto.response.ProjectDto;
 import vn.elca.training.model.entity.Employee;
@@ -51,6 +53,8 @@ import static org.mockito.Mockito.when;
 @ExtendWith(MockitoExtension.class)
 @DisplayName("ProjectServiceImpl Unit Tests")
 class ProjectServiceImplTest {
+
+    private static final Long PROJECT_VERSION = 2L;
 
     @Mock
     private ProjectRepository projectRepository;
@@ -98,35 +102,58 @@ class ProjectServiceImplTest {
         project.assignGroup(group);
         project.getEmployees().add(employeeQmv);
         ReflectionTestUtils.setField(project, "id", 100L);
+        ReflectionTestUtils.setField(project, "version", PROJECT_VERSION);
 
         projectDto = new ProjectDto(
                 100L, 3116L, "Facturation", "Les Rataites Populaires",
-                Status.NEW, LocalDate.of(2004, 2, 25), null, null, null
+                Status.NEW, LocalDate.of(2004, 2, 25), null, null, null, PROJECT_VERSION
         );
         projectSummaryDto = new ProjectDto(
                 100L, 3116L, "Facturation", "Les Rataites Populaires",
-                Status.NEW, LocalDate.of(2004, 2, 25), null, null, null
+                Status.NEW, LocalDate.of(2004, 2, 25), null, null, null, PROJECT_VERSION
         );
+    }
+
+    private ProjectUpdateRequest updateRequest(
+            String name,
+            String customer,
+            Status status,
+            LocalDate startDate,
+            LocalDate endDate,
+            List<String> visas,
+            Long groupId,
+            Long version
+    ) {
+        return new ProjectUpdateRequest(
+                name, customer, status, startDate, endDate, visas, groupId, version
+        );
+    }
+
+    private ProjectUpdateRequest defaultUpdateRequest() {
+        return updateRequest(
+                "Updated Name",
+                "Updated Customer",
+                Status.INP,
+                LocalDate.of(2026, 2, 1),
+                LocalDate.of(2026, 11, 30),
+                Arrays.asList("QMV", "HNH"),
+                10L,
+                PROJECT_VERSION
+        );
+    }
+
+    private void stubValidUpdate(ProjectUpdateRequest request) {
+        when(projectValidator.validateUpdateProject(100L, request)).thenReturn(project);
+        when(groupService.findById(request.getGroupId())).thenReturn(group);
+    }
+
+    private ProjectSearchCondition searchCondition() {
+        return new ProjectSearchCondition();
     }
 
     @Nested
     @DisplayName("Happy path")
     class HappyPath {
-
-        @Test
-        @DisplayName("findAll should return mapped summaries for provided pageable")
-        void findAll_shouldReturnMappedSummaries() {
-            Pageable pageable = PageRequest.of(0, 10, Sort.by("projectNumber").ascending());
-            Page<Project> projectPage = new PageImpl<>(Collections.singletonList(project));
-            when(projectRepository.findAll(pageable)).thenReturn(projectPage);
-            when(projectMapper.toProjectSummary(project)).thenReturn(projectSummaryDto);
-
-            Page<ProjectDto> result = projectService.findAll(pageable);
-
-            assertThat(result.getContent()).containsExactly(projectSummaryDto);
-            verify(projectRepository).findAll(pageable);
-            verify(projectMapper).toProjectSummary(project);
-        }
 
         @Test
         @DisplayName("findProjectById should return mapped project DTO when project exists")
@@ -146,13 +173,16 @@ class ProjectServiceImplTest {
         void findProjectsByCriteria_shouldUseRepository_whenOnlyStatusProvided() {
             Pageable pageable = PageRequest.of(0, 10, Sort.by("projectNumber").ascending());
             Page<Project> projectPage = new PageImpl<>(Collections.singletonList(project));
-            when(projectRepository.findProjectsByCriteria(null, Status.NEW, pageable)).thenReturn(projectPage);
+            ProjectSearchCondition condition = searchCondition();
+            condition.setStatus(Status.NEW);
+            when(projectRepository.findProjectsByCriteria(condition, pageable)).thenReturn(projectPage);
             when(projectMapper.toProjectSummary(project)).thenReturn(projectSummaryDto);
 
-            Page<ProjectDto> result = projectService.findProjectsByCriteria(null, Status.NEW, pageable);
+            Page<ProjectDto> result = projectService.findProjectsByCriteria(condition, pageable);
 
             assertThat(result.getContent()).containsExactly(projectSummaryDto);
-            verify(projectRepository).findProjectsByCriteria(null, Status.NEW, pageable);
+            verify(projectValidator).validateSearchCondition(condition);
+            verify(projectRepository).findProjectsByCriteria(condition, pageable);
             verify(projectRepository, never()).findAll(any(Pageable.class));
         }
 
@@ -161,14 +191,63 @@ class ProjectServiceImplTest {
         void findProjectsByCriteria_shouldUseFindAll_whenNoCriteriaProvided() {
             Pageable pageable = PageRequest.of(0, 10, Sort.by("projectNumber").ascending());
             Page<Project> projectPage = new PageImpl<>(Collections.singletonList(project));
+            ProjectSearchCondition condition = searchCondition();
             when(projectRepository.findAll(pageable)).thenReturn(projectPage);
             when(projectMapper.toProjectSummary(project)).thenReturn(projectSummaryDto);
 
-            Page<ProjectDto> result = projectService.findProjectsByCriteria(null, null, pageable);
+            Page<ProjectDto> result = projectService.findProjectsByCriteria(condition, pageable);
 
             assertThat(result.getContent()).containsExactly(projectSummaryDto);
             verify(projectRepository).findAll(pageable);
-            verify(projectRepository, never()).findProjectsByCriteria(any(), any(), any(Pageable.class));
+            verify(projectRepository, never()).findProjectsByCriteria(any(), any(Pageable.class));
+        }
+
+        @Test
+        @DisplayName("findProjectsByCriteria should delegate to repository when only leader visa is provided")
+        void findProjectsByCriteria_shouldUseRepository_whenOnlyLeaderVisaProvided() {
+            Pageable pageable = PageRequest.of(0, 10, Sort.by("projectNumber").ascending());
+            Page<Project> projectPage = new PageImpl<>(Collections.singletonList(project));
+            ProjectSearchCondition condition = searchCondition();
+            condition.setLeaderVisa("QMV");
+            when(projectRepository.findProjectsByCriteria(condition, pageable)).thenReturn(projectPage);
+            when(projectMapper.toProjectSummary(project)).thenReturn(projectSummaryDto);
+
+            Page<ProjectDto> result = projectService.findProjectsByCriteria(condition, pageable);
+
+            assertThat(result.getContent()).containsExactly(projectSummaryDto);
+            verify(projectRepository, never()).findAll(any(Pageable.class));
+        }
+
+        @Test
+        @DisplayName("findProjectsByCriteria should delegate to repository when only member visa is provided")
+        void findProjectsByCriteria_shouldUseRepository_whenOnlyMemberVisaProvided() {
+            Pageable pageable = PageRequest.of(0, 10, Sort.by("projectNumber").ascending());
+            Page<Project> projectPage = new PageImpl<>(Collections.singletonList(project));
+            ProjectSearchCondition condition = searchCondition();
+            condition.setMemberVisa("HNH");
+            when(projectRepository.findProjectsByCriteria(condition, pageable)).thenReturn(projectPage);
+            when(projectMapper.toProjectSummary(project)).thenReturn(projectSummaryDto);
+
+            Page<ProjectDto> result = projectService.findProjectsByCriteria(condition, pageable);
+
+            assertThat(result.getContent()).containsExactly(projectSummaryDto);
+            verify(projectRepository, never()).findAll(any(Pageable.class));
+        }
+
+        @Test
+        @DisplayName("findProjectsByCriteria should delegate to repository when only a date range is provided")
+        void findProjectsByCriteria_shouldUseRepository_whenOnlyDateRangeProvided() {
+            Pageable pageable = PageRequest.of(0, 10, Sort.by("projectNumber").ascending());
+            Page<Project> projectPage = new PageImpl<>(Collections.singletonList(project));
+            ProjectSearchCondition condition = searchCondition();
+            condition.setStartDateFrom(LocalDate.of(2026, 1, 1));
+            when(projectRepository.findProjectsByCriteria(condition, pageable)).thenReturn(projectPage);
+            when(projectMapper.toProjectSummary(project)).thenReturn(projectSummaryDto);
+
+            Page<ProjectDto> result = projectService.findProjectsByCriteria(condition, pageable);
+
+            assertThat(result.getContent()).containsExactly(projectSummaryDto);
+            verify(projectRepository, never()).findAll(any(Pageable.class));
         }
 
         @Test
@@ -176,13 +255,16 @@ class ProjectServiceImplTest {
         void findProjectsByCriteria_shouldReturnMappedPage() {
             Pageable pageable = Pageable.unpaged();
             Page<Project> projectPage = new PageImpl<>(Collections.singletonList(project));
-            when(projectRepository.findProjectsByCriteria("fact", Status.NEW, pageable)).thenReturn(projectPage);
+            ProjectSearchCondition condition = searchCondition();
+            condition.setKeyword("fact");
+            condition.setStatus(Status.NEW);
+            when(projectRepository.findProjectsByCriteria(condition, pageable)).thenReturn(projectPage);
             when(projectMapper.toProjectSummary(project)).thenReturn(projectSummaryDto);
 
-            Page<ProjectDto> result = projectService.findProjectsByCriteria("fact", Status.NEW, pageable);
+            Page<ProjectDto> result = projectService.findProjectsByCriteria(condition, pageable);
 
             assertThat(result.getContent()).containsExactly(projectSummaryDto);
-            verify(projectRepository).findProjectsByCriteria("fact", Status.NEW, pageable);
+            verify(projectRepository).findProjectsByCriteria(condition, pageable);
         }
 
         @Test
@@ -233,43 +315,6 @@ class ProjectServiceImplTest {
         }
 
         @Test
-        @DisplayName("updateProject should update fields, group and members")
-        void updateProject_shouldUpdateProject_whenRequestIsValid() {
-            ProjectUpdateRequest request = new ProjectUpdateRequest(
-                    "Updated Name",
-                    "Updated Customer",
-                    Status.INP,
-                    LocalDate.of(2026, 2, 1),
-                    LocalDate.of(2026, 11, 30),
-                    Arrays.asList("QMV", "HNH"),
-                    10L
-            );
-
-            when(projectValidator.validateUpdateProject(100L, request)).thenReturn(project);
-            when(groupService.findById(10L)).thenReturn(group);
-            when(employeeService.findEmployeesByVisas(Collections.singletonList("HNH")))
-                    .thenReturn(Collections.singletonList(employeeHnh));
-            when(projectMapper.toProjectDto(project)).thenReturn(projectDto);
-
-            ProjectDto result = projectService.updateProject(100L, request);
-
-            assertThat(result).isEqualTo(projectDto);
-            assertThat(project.getName()).isEqualTo("Updated Name");
-            assertThat(project.getCustomer()).isEqualTo("Updated Customer");
-            assertThat(project.getStatus()).isEqualTo(Status.INP);
-            assertThat(project.getStartDate()).isEqualTo(LocalDate.of(2026, 2, 1));
-            assertThat(project.getEndDate()).isEqualTo(LocalDate.of(2026, 11, 30));
-            assertThat(project.getProjectNumber()).isEqualTo(3116L);
-            assertThat(project.getEmployees()).containsExactlyInAnyOrder(employeeQmv, employeeHnh);
-            assertThat(project.getGroup()).isEqualTo(group);
-
-            verify(projectValidator).validateUpdateProject(100L, request);
-            verify(groupService).findById(10L);
-            verify(employeeService).findEmployeesByVisas(Collections.singletonList("HNH"));
-            verify(projectMapper).toProjectDto(project);
-        }
-
-        @Test
         @DisplayName("deleteProject should delete project when status is NEW")
         void deleteProject_shouldDeleteProject_whenProjectIsDeletable() {
             when(projectRepository.findById(100L)).thenReturn(Optional.of(project));
@@ -301,6 +346,264 @@ class ProjectServiceImplTest {
             verify(projectRepository).findAllById(requestedIds);
             verify(projectValidator).validateDeleteProjects(projects, requestedIds);
             verify(projectRepository).deleteAll(projects);
+        }
+    }
+
+    @Nested
+    @DisplayName("updateProject")
+    class UpdateProject {
+
+        @Test
+        @DisplayName("should update scalar fields, keep project number, sync members and group")
+        void shouldUpdateProject_whenRequestIsValid() {
+            ProjectUpdateRequest request = defaultUpdateRequest();
+            stubValidUpdate(request);
+            when(employeeService.findEmployeesByVisas(Collections.singletonList("HNH")))
+                    .thenReturn(Collections.singletonList(employeeHnh));
+
+            projectService.updateProject(100L, request);
+
+            assertThat(project.getName()).isEqualTo("Updated Name");
+            assertThat(project.getCustomer()).isEqualTo("Updated Customer");
+            assertThat(project.getStatus()).isEqualTo(Status.INP);
+            assertThat(project.getStartDate()).isEqualTo(LocalDate.of(2026, 2, 1));
+            assertThat(project.getEndDate()).isEqualTo(LocalDate.of(2026, 11, 30));
+            assertThat(project.getProjectNumber()).isEqualTo(3116L);
+            assertThat(project.getEmployees()).containsExactlyInAnyOrder(employeeQmv, employeeHnh);
+            assertThat(project.getGroup()).isEqualTo(group);
+
+            verify(projectValidator).validateUpdateProject(100L, request);
+            verify(groupService).findById(10L);
+            verify(employeeService).findEmployeesByVisas(Collections.singletonList("HNH"));
+            verify(projectRepository, never()).save(any());
+        }
+
+        @Test
+        @DisplayName("should reassign group when groupId changes")
+        void shouldReassignGroup_whenGroupIdChanges() {
+            Group newGroup = new Group();
+            ReflectionTestUtils.setField(newGroup, "id", 20L);
+
+            ProjectUpdateRequest request = updateRequest(
+                    "Updated Name", "Updated Customer", Status.PLA,
+                    LocalDate.of(2026, 3, 1), null,
+                    Collections.singletonList("QMV"), 20L, PROJECT_VERSION
+            );
+
+            when(projectValidator.validateUpdateProject(100L, request)).thenReturn(project);
+            when(groupService.findById(20L)).thenReturn(newGroup);
+
+            projectService.updateProject(100L, request);
+
+            assertThat(project.getGroup()).isEqualTo(newGroup);
+            verify(groupService).findById(20L);
+            verify(employeeService, never()).findEmployeesByVisas(anyList());
+        }
+
+        @Test
+        @DisplayName("should clear all members when visas list is empty")
+        void shouldClearEmployees_whenVisasEmpty() {
+            ProjectUpdateRequest request = updateRequest(
+                    "Updated Name", "Updated Customer", Status.NEW,
+                    LocalDate.of(2026, 2, 1), null,
+                    Collections.emptyList(), 10L, PROJECT_VERSION
+            );
+            stubValidUpdate(request);
+
+            projectService.updateProject(100L, request);
+
+            assertThat(project.getEmployees()).isEmpty();
+            verify(employeeService, never()).findEmployeesByVisas(anyList());
+        }
+
+        @Test
+        @DisplayName("should clear all members when visas is null")
+        void shouldClearEmployees_whenVisasNull() {
+            ProjectUpdateRequest request = updateRequest(
+                    "Updated Name", "Updated Customer", Status.NEW,
+                    LocalDate.of(2026, 2, 1), null,
+                    null, 10L, PROJECT_VERSION
+            );
+            stubValidUpdate(request);
+
+            projectService.updateProject(100L, request);
+
+            assertThat(project.getEmployees()).isEmpty();
+            verify(employeeService, never()).findEmployeesByVisas(anyList());
+        }
+
+        @Test
+        @DisplayName("should not call employee service when visas are unchanged")
+        void shouldNotLookupEmployees_whenVisasUnchanged() {
+            ProjectUpdateRequest request = updateRequest(
+                    "Updated Name", "Updated Customer", Status.INP,
+                    LocalDate.of(2026, 2, 1), null,
+                    Collections.singletonList("QMV"), 10L, PROJECT_VERSION
+            );
+            stubValidUpdate(request);
+
+            projectService.updateProject(100L, request);
+
+            verify(employeeService, never()).findEmployeesByVisas(anyList());
+            assertThat(project.getEmployees()).containsExactly(employeeQmv);
+        }
+
+        @Test
+        @DisplayName("should remove members without employee lookup when only deletions are needed")
+        void shouldRemoveMembersWithoutLookup_whenVisasShrink() {
+            project.addEmployee(employeeHnh);
+
+            ProjectUpdateRequest request = updateRequest(
+                    "Updated Name", "Updated Customer", Status.INP,
+                    LocalDate.of(2026, 2, 1), null,
+                    Collections.singletonList("QMV"), 10L, PROJECT_VERSION
+            );
+            stubValidUpdate(request);
+
+            projectService.updateProject(100L, request);
+
+            assertThat(project.getEmployees()).containsExactly(employeeQmv);
+            verify(employeeService, never()).findEmployeesByVisas(anyList());
+        }
+
+        @Test
+        @DisplayName("should replace members when visas change completely")
+        void shouldReplaceEmployees_whenVisasChange() {
+            project.getEmployees().clear();
+            project.addEmployee(employeeQmv);
+
+            ProjectUpdateRequest request = updateRequest(
+                    "Updated Name", "Updated Customer", Status.INP,
+                    LocalDate.of(2026, 2, 1), null,
+                    Collections.singletonList("HNH"), 10L, PROJECT_VERSION
+            );
+            stubValidUpdate(request);
+            when(employeeService.findEmployeesByVisas(Collections.singletonList("HNH")))
+                    .thenReturn(Collections.singletonList(employeeHnh));
+
+            projectService.updateProject(100L, request);
+
+            assertThat(project.getEmployees()).containsExactly(employeeHnh);
+            verify(employeeService).findEmployeesByVisas(Collections.singletonList("HNH"));
+        }
+
+        @Test
+        @DisplayName("should normalize mixed-case and blank visas before syncing")
+        void shouldNormalizeVisas_whenMixedCaseAndBlankTokensProvided() {
+            ProjectUpdateRequest request = updateRequest(
+                    "Updated Name", "Updated Customer", Status.INP,
+                    LocalDate.of(2026, 2, 1), null,
+                    Arrays.asList("qmv", "", "  ", "hnh"), 10L, PROJECT_VERSION
+            );
+            stubValidUpdate(request);
+            when(employeeService.findEmployeesByVisas(Collections.singletonList("HNH")))
+                    .thenReturn(Collections.singletonList(employeeHnh));
+
+            projectService.updateProject(100L, request);
+
+            verify(employeeService).findEmployeesByVisas(Collections.singletonList("HNH"));
+            assertThat(project.getEmployees()).containsExactlyInAnyOrder(employeeQmv, employeeHnh);
+        }
+
+        @Test
+        @DisplayName("should remove members stored with different visa casing")
+        void shouldRemoveMembers_whenStoredVisaCasingDiffers() {
+            Employee lowerCaseVisaEmployee = new Employee("qmv", "Quy", "Van", LocalDate.of(1990, 2, 3));
+            ReflectionTestUtils.setField(lowerCaseVisaEmployee, "id", 3L);
+
+            project.getEmployees().clear();
+            project.addEmployee(lowerCaseVisaEmployee);
+            project.addEmployee(employeeHnh);
+
+            ProjectUpdateRequest request = updateRequest(
+                    "Updated Name", "Updated Customer", Status.INP,
+                    LocalDate.of(2026, 2, 1), null,
+                    Collections.singletonList("HNH"), 10L, PROJECT_VERSION
+            );
+            stubValidUpdate(request);
+
+            projectService.updateProject(100L, request);
+
+            assertThat(project.getEmployees()).containsExactly(employeeHnh);
+            verify(employeeService, never()).findEmployeesByVisas(anyList());
+        }
+
+        @Test
+        @DisplayName("should apply complex update with new group, status and member swap")
+        void shouldApplyComplexUpdate_whenGroupStatusAndMembersChange() {
+            Group newGroup = new Group();
+            ReflectionTestUtils.setField(newGroup, "id", 20L);
+
+            ProjectUpdateRequest request = updateRequest(
+                    "Complex Name", "Complex Customer", Status.FIN,
+                    LocalDate.of(2027, 1, 15), LocalDate.of(2027, 12, 15),
+                    Arrays.asList("HNH", "QMV"), 20L, PROJECT_VERSION
+            );
+
+            when(projectValidator.validateUpdateProject(100L, request)).thenReturn(project);
+            when(groupService.findById(20L)).thenReturn(newGroup);
+            when(employeeService.findEmployeesByVisas(Collections.singletonList("HNH")))
+                    .thenReturn(Collections.singletonList(employeeHnh));
+
+            projectService.updateProject(100L, request);
+
+            assertThat(project.getName()).isEqualTo("Complex Name");
+            assertThat(project.getCustomer()).isEqualTo("Complex Customer");
+            assertThat(project.getStatus()).isEqualTo(Status.FIN);
+            assertThat(project.getStartDate()).isEqualTo(LocalDate.of(2027, 1, 15));
+            assertThat(project.getEndDate()).isEqualTo(LocalDate.of(2027, 12, 15));
+            assertThat(project.getGroup()).isEqualTo(newGroup);
+            assertThat(project.getEmployees()).containsExactlyInAnyOrder(employeeQmv, employeeHnh);
+            verify(employeeService).findEmployeesByVisas(Collections.singletonList("HNH"));
+        }
+
+        @Test
+        @DisplayName("should throw optimistic lock failure when request version differs")
+        void shouldThrowOptimisticLockFailure_whenVersionMismatch() {
+            ProjectUpdateRequest request = updateRequest(
+                    "Updated Name", "Updated Customer", Status.INP,
+                    LocalDate.of(2026, 2, 1), null,
+                    Collections.singletonList("QMV"), 10L, 99L
+            );
+            when(projectValidator.validateUpdateProject(100L, request)).thenReturn(project);
+
+            assertThatThrownBy(() -> projectService.updateProject(100L, request))
+                    .isInstanceOf(OptimisticLockingFailureException.class)
+                    .hasMessageContaining("Version changes are not equal");
+
+            verify(groupService, never()).findById(any());
+            verify(employeeService, never()).findEmployeesByVisas(anyList());
+        }
+
+        @Test
+        @DisplayName("should propagate validator errors before group or member sync")
+        void shouldPropagateValidatorError_whenEndDateInvalid() {
+            ProjectUpdateRequest request = defaultUpdateRequest();
+            doThrow(new BusinessException(ErrorCode.INVALID_END_DATE))
+                    .when(projectValidator).validateUpdateProject(100L, request);
+
+            assertThatThrownBy(() -> projectService.updateProject(100L, request))
+                    .isInstanceOf(BusinessException.class)
+                    .satisfies(ex -> assertThat(((BusinessException) ex).getErrorCode())
+                            .isEqualTo(ErrorCode.INVALID_END_DATE));
+
+            verify(groupService, never()).findById(any());
+            verify(employeeService, never()).findEmployeesByVisas(anyList());
+        }
+
+        @Test
+        @DisplayName("should propagate not-found from validator")
+        void shouldPropagateNotFound_whenProjectMissing() {
+            ProjectUpdateRequest request = defaultUpdateRequest();
+            doThrow(new BusinessException(ErrorCode.PROJECT_NOT_FOUND))
+                    .when(projectValidator).validateUpdateProject(100L, request);
+
+            assertThatThrownBy(() -> projectService.updateProject(100L, request))
+                    .isInstanceOf(BusinessException.class)
+                    .satisfies(ex -> assertThat(((BusinessException) ex).getErrorCode())
+                            .isEqualTo(ErrorCode.PROJECT_NOT_FOUND));
+
+            verify(groupService, never()).findById(any());
         }
     }
 
@@ -361,89 +664,6 @@ class ProjectServiceImplTest {
             ArgumentCaptor<Project> projectCaptor = ArgumentCaptor.forClass(Project.class);
             verify(projectRepository).save(projectCaptor.capture());
             assertThat(projectCaptor.getValue().getEmployees()).isEmpty();
-        }
-
-        @Test
-        @DisplayName("updateProject should clear all members when visas list is empty")
-        void updateProject_shouldClearEmployees_whenVisasEmpty() {
-            ProjectUpdateRequest request = new ProjectUpdateRequest(
-                    "Updated Name", "Updated Customer", Status.NEW,
-                    LocalDate.of(2026, 2, 1), null,
-                    Collections.emptyList(), 10L
-            );
-
-            when(projectValidator.validateUpdateProject(100L, request)).thenReturn(project);
-            when(groupService.findById(10L)).thenReturn(group);
-            when(projectMapper.toProjectDto(project)).thenReturn(projectDto);
-
-            projectService.updateProject(100L, request);
-
-            assertThat(project.getEmployees()).isEmpty();
-            verify(employeeService, never()).findEmployeesByVisas(anyList());
-        }
-
-        @Test
-        @DisplayName("updateProject should not call employee service when visas are unchanged")
-        void updateProject_shouldNotLookupEmployees_whenVisasUnchanged() {
-            ProjectUpdateRequest request = new ProjectUpdateRequest(
-                    "Updated Name", "Updated Customer", Status.INP,
-                    LocalDate.of(2026, 2, 1), null,
-                    Collections.singletonList("QMV"), 10L
-            );
-
-            when(projectValidator.validateUpdateProject(100L, request)).thenReturn(project);
-            when(groupService.findById(10L)).thenReturn(group);
-            when(projectMapper.toProjectDto(project)).thenReturn(projectDto);
-
-            projectService.updateProject(100L, request);
-
-            verify(employeeService, never()).findEmployeesByVisas(anyList());
-            assertThat(project.getEmployees()).containsExactly(employeeQmv);
-        }
-
-        @Test
-        @DisplayName("updateProject should replace members when visas change completely")
-        void updateProject_shouldReplaceEmployees_whenVisasChange() {
-            project.getEmployees().clear();
-            project.addEmployee(employeeQmv);
-
-            ProjectUpdateRequest request = new ProjectUpdateRequest(
-                    "Updated Name", "Updated Customer", Status.INP,
-                    LocalDate.of(2026, 2, 1), null,
-                    Collections.singletonList("HNH"), 10L
-            );
-
-            when(projectValidator.validateUpdateProject(100L, request)).thenReturn(project);
-            when(groupService.findById(10L)).thenReturn(group);
-            when(employeeService.findEmployeesByVisas(Collections.singletonList("HNH")))
-                    .thenReturn(Collections.singletonList(employeeHnh));
-            when(projectMapper.toProjectDto(project)).thenReturn(projectDto);
-
-            projectService.updateProject(100L, request);
-
-            assertThat(project.getEmployees()).containsExactly(employeeHnh);
-            verify(employeeService).findEmployeesByVisas(Collections.singletonList("HNH"));
-        }
-
-        @Test
-        @DisplayName("updateProject should normalize mixed-case visas before syncing")
-        void updateProject_shouldNormalizeVisas_whenMixedCaseProvided() {
-            ProjectUpdateRequest request = new ProjectUpdateRequest(
-                    "Updated Name", "Updated Customer", Status.INP,
-                    LocalDate.of(2026, 2, 1), null,
-                    Arrays.asList("qmv", "hnh"), 10L
-            );
-
-            when(projectValidator.validateUpdateProject(100L, request)).thenReturn(project);
-            when(groupService.findById(10L)).thenReturn(group);
-            when(employeeService.findEmployeesByVisas(Collections.singletonList("HNH")))
-                    .thenReturn(Collections.singletonList(employeeHnh));
-            when(projectMapper.toProjectDto(project)).thenReturn(projectDto);
-
-            projectService.updateProject(100L, request);
-
-            verify(employeeService).findEmployeesByVisas(Collections.singletonList("HNH"));
-            assertThat(project.getEmployees()).containsExactlyInAnyOrder(employeeQmv, employeeHnh);
         }
 
         @Test

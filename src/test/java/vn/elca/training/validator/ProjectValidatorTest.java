@@ -10,6 +10,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.util.ReflectionTestUtils;
 import vn.elca.training.model.dto.request.ProjectCreationRequest;
+import vn.elca.training.model.dto.request.ProjectSearchCondition;
 import vn.elca.training.model.dto.request.ProjectUpdateRequest;
 import vn.elca.training.model.entity.Project;
 import vn.elca.training.model.entity.Status;
@@ -73,7 +74,21 @@ class ProjectValidatorTest {
                 start,
                 end,
                 Collections.singletonList("QMV"),
-                10L
+                10L,
+                2L
+        );
+    }
+
+    private ProjectUpdateRequest updateRequest(LocalDate start, LocalDate end, Long version) {
+        return new ProjectUpdateRequest(
+                "Updated Name",
+                "Updated Customer",
+                Status.INP,
+                start,
+                end,
+                Collections.singletonList("QMV"),
+                10L,
+                version
         );
     }
 
@@ -202,6 +217,129 @@ class ProjectValidatorTest {
                     .isInstanceOf(BusinessException.class)
                     .satisfies(ex -> assertThat(((BusinessException) ex).getErrorCode())
                             .isEqualTo(ErrorCode.INVALID_END_DATE));
+        }
+
+        @Test
+        @DisplayName("Should return project without checking request version")
+        void shouldReturnProject_whenVersionDiffersFromEntity() {
+            ReflectionTestUtils.setField(project, "version", 5L);
+            ProjectUpdateRequest request = updateRequest(
+                    LocalDate.of(2026, 1, 1),
+                    LocalDate.of(2026, 12, 31),
+                    2L
+            );
+            when(projectRepository.findProjectById(100L)).thenReturn(Optional.of(project));
+
+            Project result = projectValidator.validateUpdateProject(100L, request);
+
+            assertThat(result).isSameAs(project);
+            assertThat(result.getVersion()).isEqualTo(5L);
+        }
+    }
+
+    @Nested
+    @DisplayName("validateSearchCondition")
+    class ValidateSearchCondition {
+
+        private ProjectSearchCondition condition() {
+            return new ProjectSearchCondition();
+        }
+
+        @Test
+        @DisplayName("Should pass when no date range criteria are provided")
+        void shouldPass_whenNoDateRangesProvided() {
+            assertThatCode(() -> projectValidator.validateSearchCondition(condition()))
+                    .doesNotThrowAnyException();
+        }
+
+        @Test
+        @DisplayName("Should pass when start date range is valid")
+        void shouldPass_whenStartDateRangeValid() {
+            ProjectSearchCondition condition = condition();
+            condition.setStartDateFrom(LocalDate.of(2026, 1, 1));
+            condition.setStartDateTo(LocalDate.of(2026, 12, 31));
+
+            assertThatCode(() -> projectValidator.validateSearchCondition(condition))
+                    .doesNotThrowAnyException();
+        }
+
+        @Test
+        @DisplayName("Should pass when start date range bounds are equal")
+        void shouldPass_whenStartDateRangeEqual() {
+            LocalDate sameDay = LocalDate.of(2026, 6, 1);
+            ProjectSearchCondition condition = condition();
+            condition.setStartDateFrom(sameDay);
+            condition.setStartDateTo(sameDay);
+
+            assertThatCode(() -> projectValidator.validateSearchCondition(condition))
+                    .doesNotThrowAnyException();
+        }
+
+        @Test
+        @DisplayName("Should pass when only one side of the start date range is provided")
+        void shouldPass_whenOnlyOneSideOfStartDateRangeProvided() {
+            ProjectSearchCondition fromOnly = condition();
+            fromOnly.setStartDateFrom(LocalDate.of(2026, 1, 1));
+
+            ProjectSearchCondition toOnly = condition();
+            toOnly.setStartDateTo(LocalDate.of(2026, 1, 1));
+
+            assertThatCode(() -> projectValidator.validateSearchCondition(fromOnly))
+                    .doesNotThrowAnyException();
+            assertThatCode(() -> projectValidator.validateSearchCondition(toOnly))
+                    .doesNotThrowAnyException();
+        }
+
+        @Test
+        @DisplayName("Should throw INVALID_SEARCH_START_DATE_RANGE when start date 'to' is before 'from'")
+        void shouldThrow_whenStartDateRangeInvalid() {
+            ProjectSearchCondition condition = condition();
+            condition.setStartDateFrom(LocalDate.of(2026, 12, 31));
+            condition.setStartDateTo(LocalDate.of(2026, 1, 1));
+
+            assertThatThrownBy(() -> projectValidator.validateSearchCondition(condition))
+                    .isInstanceOf(BusinessException.class)
+                    .satisfies(ex -> assertThat(((BusinessException) ex).getErrorCode())
+                            .isEqualTo(ErrorCode.INVALID_SEARCH_START_DATE_RANGE));
+        }
+
+        @Test
+        @DisplayName("Should pass when end date range is valid")
+        void shouldPass_whenEndDateRangeValid() {
+            ProjectSearchCondition condition = condition();
+            condition.setEndDateFrom(LocalDate.of(2026, 1, 1));
+            condition.setEndDateTo(LocalDate.of(2026, 12, 31));
+
+            assertThatCode(() -> projectValidator.validateSearchCondition(condition))
+                    .doesNotThrowAnyException();
+        }
+
+        @Test
+        @DisplayName("Should throw INVALID_SEARCH_END_DATE_RANGE when end date 'to' is before 'from'")
+        void shouldThrow_whenEndDateRangeInvalid() {
+            ProjectSearchCondition condition = condition();
+            condition.setEndDateFrom(LocalDate.of(2026, 12, 31));
+            condition.setEndDateTo(LocalDate.of(2026, 1, 1));
+
+            assertThatThrownBy(() -> projectValidator.validateSearchCondition(condition))
+                    .isInstanceOf(BusinessException.class)
+                    .satisfies(ex -> assertThat(((BusinessException) ex).getErrorCode())
+                            .isEqualTo(ErrorCode.INVALID_SEARCH_END_DATE_RANGE));
+        }
+
+        @Test
+        @DisplayName("Should report start date range before end date range when both are invalid")
+        void shouldThrowStartDateError_whenBothRangesInvalid() {
+            ProjectSearchCondition condition = condition();
+            condition.setStartDateFrom(LocalDate.of(2026, 12, 31));
+            condition.setStartDateTo(LocalDate.of(2026, 1, 1));
+            condition.setEndDateFrom(LocalDate.of(2026, 12, 31));
+            condition.setEndDateTo(LocalDate.of(2026, 1, 1));
+
+            assertThatThrownBy(() -> projectValidator.validateSearchCondition(condition))
+                    .isInstanceOf(BusinessException.class)
+                    .satisfies(ex -> assertThat(((BusinessException) ex).getErrorCode())
+                            .isEqualTo(ErrorCode.INVALID_SEARCH_START_DATE_RANGE));
         }
     }
 
