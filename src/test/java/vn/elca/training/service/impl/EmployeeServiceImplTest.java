@@ -58,7 +58,7 @@ class EmployeeServiceImplTest {
         employeeHnh = new Employee("HNH", "Hanh", "Ho", LocalDate.of(1992, 5, 12));
         ReflectionTestUtils.setField(employeeHnh, "id", 2L);
 
-        employeeQmvDto = new EmployeeDto(1L, "QMV", "Quy", "Van");
+        employeeQmvDto = new EmployeeDto(1L, 1L, "QMV", "Quy", "Van");
     }
 
     @Test

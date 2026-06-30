@@ -105,12 +105,12 @@ class ProjectServiceImplTest {
         ReflectionTestUtils.setField(project, "version", PROJECT_VERSION);
 
         projectDto = new ProjectDto(
-                100L, 3116L, "Facturation", "Les Rataites Populaires",
-                Status.NEW, LocalDate.of(2004, 2, 25), null, null, null, PROJECT_VERSION
+                100L, PROJECT_VERSION, 3116L, "Facturation", "Les Rataites Populaires",
+                Status.NEW, LocalDate.of(2004, 2, 25), null, null, null
         );
         projectSummaryDto = new ProjectDto(
-                100L, 3116L, "Facturation", "Les Rataites Populaires",
-                Status.NEW, LocalDate.of(2004, 2, 25), null, null, null, PROJECT_VERSION
+                100L, PROJECT_VERSION, 3116L, "Facturation", "Les Rataites Populaires",
+                Status.NEW, LocalDate.of(2004, 2, 25), null, null, null
         );
     }
 

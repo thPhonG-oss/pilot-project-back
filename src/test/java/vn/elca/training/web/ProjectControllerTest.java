@@ -80,6 +80,7 @@ class ProjectControllerTest {
 
     projectDto = new ProjectDto(
         100L,
+        2L,
         3116L,
         "Facturation",
         "Les Rataites Populaires",
@@ -87,8 +88,7 @@ class ProjectControllerTest {
         LocalDate.of(2004, 2, 25),
         null,
         null,
-        null,
-        2L
+        null
     );
 
     when(messageService.getMessage(any(String.class))).thenAnswer(invocation -> invocation.getArgument(0));

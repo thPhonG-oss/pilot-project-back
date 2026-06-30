@@ -58,7 +58,7 @@ class EmployeeControllerTest {
         @DisplayName("Should return 200 with matching employees when keyword is provided")
         void suggestEmployees_shouldReturn200_whenKeywordProvided() throws Exception {
             List<EmployeeDto> suggestions = Collections.singletonList(
-                    new EmployeeDto(1L, "QMV", "Quy", "Van")
+                    new EmployeeDto(1L, 1L, "QMV", "Quy", "Van")
             );
             when(employeeService.suggestEmployees("qm")).thenReturn(suggestions);
 
@@ -80,8 +80,8 @@ class EmployeeControllerTest {
         @DisplayName("Should return 200 with multiple suggestions when several employees match")
         void suggestEmployees_shouldReturn200_whenMultipleMatches() throws Exception {
             List<EmployeeDto> suggestions = Arrays.asList(
-                    new EmployeeDto(1L, "QMV", "Quy", "Van"),
-                    new EmployeeDto(2L, "HNH", "Hanh", "Ho")
+                    new EmployeeDto(1L, 1L, "QMV", "Quy", "Van"),
+                    new EmployeeDto(2L, 1L, "HNH", "Hanh", "Ho")
             );
             when(employeeService.suggestEmployees("h")).thenReturn(suggestions);
 

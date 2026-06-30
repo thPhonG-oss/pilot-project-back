@@ -51,8 +51,8 @@ class GroupControllerTest {
         @DisplayName("Should return 200 with group list when groups exist")
         void getGroups_shouldReturn200_whenGroupsExist() throws Exception {
             List<GroupDto> groups = Arrays.asList(
-                    new GroupDto(10L, "QMV", "Quy Van"),
-                    new GroupDto(20L, "HNH", "Hanh Ho")
+                    new GroupDto(10L, 1L, "QMV", "Quy Van"),
+                    new GroupDto(20L, 1L, "HNH", "Hanh Ho")
             );
             when(groupService.findAll()).thenReturn(groups);
 

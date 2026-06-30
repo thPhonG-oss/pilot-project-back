@@ -57,7 +57,7 @@ class GroupServiceImplTest {
         testGroup.setLeader(leader);
         ReflectionTestUtils.setField(testGroup, "id", 10L);
 
-        testGroupDto = new GroupDto(10L, "QMV", "Quy Van");
+        testGroupDto = new GroupDto(10L, 1L, "QMV", "Quy Van");
     }
 
     @Test
@@ -100,7 +100,7 @@ class GroupServiceImplTest {
 
         when(groupRepository.findAll(any(Sort.class))).thenReturn(Arrays.asList(testGroup, secondGroup));
         when(groupMapper.toDto(testGroup)).thenReturn(testGroupDto);
-        when(groupMapper.toDto(secondGroup)).thenReturn(new GroupDto(20L, "HNH", "Hanh Ho"));
+        when(groupMapper.toDto(secondGroup)).thenReturn(new GroupDto(20L, 1L, "HNH", "Hanh Ho"));
 
         // Act
         List<GroupDto> result = groupService.findAll();
